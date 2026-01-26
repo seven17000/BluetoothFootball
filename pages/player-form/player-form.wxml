@@ -1,0 +1,93 @@
+<view class="container">
+  <form bindsubmit="submitForm">
+    <!-- 基本信息 -->
+    <view class="card">
+      <view class="card-title">基本信息</view>
+
+      <view class="form-group">
+        <text class="form-label">球员姓名 *</text>
+        <input class="form-input" name="name" value="{{formData.name}}" placeholder="请输入球员姓名" bindinput="onInput" data-field="name"/>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">球衣号码 *</text>
+        <input class="form-input" type="number" name="number" value="{{formData.number}}" placeholder="请输入球衣号码" bindinput="onInput" data-field="number"/>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">位置 *</text>
+        <picker mode="selector" range="{{positions}}" bindchange="onPositionChange">
+          <view class="form-picker">
+            {{formData.position || '请选择位置'}}
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">联系方式</text>
+        <input class="form-input" type="number" name="phone" value="{{formData.phone}}" placeholder="请输入手机号码" bindinput="onInput" data-field="phone"/>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">加入日期</text>
+        <picker mode="date" bindchange="onDateChange">
+          <view class="form-picker">
+            {{formData.joinDate || '请选择日期'}}
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">头像</text>
+        <view class="avatar-upload" bindtap="chooseAvatar">
+          <image wx:if="{{formData.avatar}}" src="{{formData.avatar}}" mode="aspectFill" class="avatar-preview"></image>
+          <view wx:else class="avatar-placeholder">
+            <text>+</text>
+            <text>上传</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 球员标签 -->
+    <view class="card">
+      <view class="card-title">球员标签</view>
+      <view class="tag-list">
+        <view class="tag-item {{formData.tags.includes(item.value) ? 'active' : ''}}"
+              wx:for="{{allTags}}"
+              wx:key="value"
+              bindtap="toggleTag"
+              data-value="{{item.value}}">
+          {{item.label}}
+        </view>
+      </view>
+    </view>
+
+    <!-- 能力值 -->
+    <view class="card">
+      <view class="card-title">能力值 (1-100)</view>
+      <view class="ability-form">
+        <view class="ability-form-item" wx:for="{{abilityConfig}}" wx:key="key">
+          <view class="ability-header">
+            <text class="ability-icon">{{item.icon}}</text>
+            <text class="ability-name">{{item.label}}</text>
+            <text class="ability-value">{{formData.ability[item.key] || 0}}</text>
+          </view>
+          <slider class="ability-slider"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value="{{formData.ability[item.key] || 0}}"
+                  activeColor="#1989fa"
+                  bindchange="onAbilityChange"
+                  data-field="{{item.key}}"/>
+        </view>
+      </view>
+    </view>
+
+    <!-- 提交按钮 -->
+    <view class="btn-container">
+      <button class="btn btn-primary btn-block" form-type="submit">{{isEdit ? '保存修改' : '添加球员'}}</button>
+    </view>
+  </form>
+</view>

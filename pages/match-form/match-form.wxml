@@ -1,0 +1,73 @@
+<view class="container">
+  <form bindsubmit="submitForm">
+    <view class="card">
+      <view class="card-title">比赛信息</view>
+
+      <view class="form-group">
+        <text class="form-label">对手球队 *</text>
+        <input class="form-input" name="opponent" value="{{formData.opponent}}" placeholder="请输入对手球队名称" bindinput="onInput" data-field="opponent"/>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">比赛日期 *</text>
+        <picker mode="date" bindchange="onDateChange">
+          <view class="form-picker">
+            {{formData.matchDate || '请选择日期'}}
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">比赛时间</text>
+        <picker mode="time" bindchange="onTimeChange">
+          <view class="form-picker">
+            {{formData.matchTime || '请选择时间'}}
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">主客场 *</text>
+        <radio-group class="radio-group" bindchange="onHomeChange">
+          <label class="radio-item">
+            <radio value="true" checked="{{formData.isHome === true}}"/>主场
+          </label>
+          <label class="radio-item">
+            <radio value="false" checked="{{formData.isHome === false}}"/>客场
+          </label>
+        </radio-group>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">比赛地点</text>
+        <input class="form-input" name="location" value="{{formData.location}}" placeholder="请输入比赛地点" bindinput="onInput" data-field="location"/>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">我方进球 *</text>
+        <input class="form-input" type="number" name="goals" value="{{formData.goals}}" placeholder="请输入进球数" bindinput="onInput" data-field="goals"/>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">对方进球 *</text>
+        <input class="form-input" type="number" name="conceded" value="{{formData.conceded}}" placeholder="请输入失球数" bindinput="onInput" data-field="conceded"/>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">比赛结果</text>
+        <view class="result-display">
+          <text class="result-tag {{resultClass}}">{{resultText}}</text>
+        </view>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">备注</text>
+        <textarea class="form-textarea" name="notes" value="{{formData.notes}}" placeholder="请输入备注信息" bindinput="onInput" data-field="notes"></textarea>
+      </view>
+    </view>
+
+    <view class="btn-container">
+      <button class="btn btn-primary btn-block" form-type="submit">{{isEdit ? '保存修改' : '添加比赛'}}</button>
+    </view>
+  </form>
+</view>

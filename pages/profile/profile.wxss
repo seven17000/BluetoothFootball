@@ -1,0 +1,154 @@
+page {
+  background-color: #f5f7fa;
+}
+
+.container {
+  padding: 20rpx;
+  padding-bottom: 120rpx;
+}
+
+/* 卡片样式 */
+.card {
+  background-color: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+}
+
+/* 用户卡片 */
+.user-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+}
+
+.avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 24rpx;
+}
+
+.avatar text {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #fff;
+}
+
+.info {
+  flex: 1;
+}
+
+.name {
+  display: block;
+  font-size: 36rpx;
+  font-weight: bold;
+  margin-bottom: 12rpx;
+}
+
+.role-tag {
+  display: inline-block;
+  padding: 8rpx 20rpx;
+  border-radius: 20rpx;
+  font-size: 24rpx;
+}
+
+.role-tag.admin {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.role-tag.user {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.login-prompt {
+  text-align: center;
+}
+
+.prompt-text {
+  display: block;
+  font-size: 28rpx;
+  margin-bottom: 24rpx;
+  opacity: 0.9;
+}
+
+/* 菜单卡片 */
+.menu-card {
+  padding: 0;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 30rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-left {
+  display: flex;
+  align-items: center;
+}
+
+.menu-icon {
+  font-size: 40rpx;
+  margin-right: 20rpx;
+}
+
+.menu-text {
+  font-size: 30rpx;
+  color: #333;
+}
+
+.menu-arrow {
+  font-size: 28rpx;
+  color: #ccc;
+}
+
+/* 按钮容器 */
+.btn-container {
+  margin-top: 40rpx;
+}
+
+.btn-block {
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  font-size: 32rpx;
+}
+
+.btn-danger {
+  background-color: #fff;
+  color: #fa5151;
+  border: 1rpx solid #fa5151;
+}
+
+/* 关于信息 */
+.about-info {
+  text-align: center;
+  padding: 40rpx;
+}
+
+.version {
+  display: block;
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 10rpx;
+}
+
+.copyright {
+  font-size: 22rpx;
+  color: #ccc;
+}

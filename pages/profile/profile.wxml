@@ -1,0 +1,74 @@
+<view class="container">
+  <!-- 用户信息卡片 -->
+  <view class="card user-card">
+    <view class="user-info" wx:if="{{isLoggedIn}}">
+      <view class="avatar">
+        <text>{{userInfo.name || userInfo.nickName || '用户'}}</text>
+      </view>
+      <view class="info">
+        <text class="name">{{userInfo.name || userInfo.nickName || '匿名用户'}}</text>
+        <view class="role-tag {{userInfo.role === 'admin' ? 'admin' : 'user'}}">
+          {{userInfo.role === 'admin' ? '管理员' : '普通用户'}}
+        </view>
+      </view>
+    </view>
+    <view class="login-prompt" wx:else>
+      <text class="prompt-text">登录后可以查看和管理球队数据</text>
+      <button class="btn btn-primary" bindtap="login">微信一键登录</button>
+    </view>
+  </view>
+
+  <!-- 菜单列表 -->
+  <view class="card menu-card" wx:if="{{isLoggedIn}}">
+    <view class="menu-item" bindtap="goToProfileEdit">
+      <view class="menu-left">
+        <text class="menu-icon">👤</text>
+        <text class="menu-text">个人信息</text>
+      </view>
+      <text class="menu-arrow">></text>
+    </view>
+
+    <view class="menu-item" bindtap="goToMatches">
+      <view class="menu-left">
+        <text class="menu-icon">⚽</text>
+        <text class="menu-text">比赛管理</text>
+      </view>
+      <text class="menu-arrow">></text>
+    </view>
+
+    <view class="menu-item" bindtap="goToAttendance">
+      <view class="menu-left">
+        <text class="menu-icon">📋</text>
+        <text class="menu-text">出勤记录</text>
+      </view>
+      <text class="menu-arrow">></text>
+    </view>
+
+    <view class="menu-item" wx:if="{{isAdmin}}" bindtap="goToUserManage">
+      <view class="menu-left">
+        <text class="menu-icon">👥</text>
+        <text class="menu-text">用户管理</text>
+      </view>
+      <text class="menu-arrow">></text>
+    </view>
+
+    <view class="menu-item" bindtap="goToAbout">
+      <view class="menu-left">
+        <text class="menu-icon">ℹ️</text>
+        <text class="menu-text">关于小程序</text>
+      </view>
+      <text class="menu-arrow">></text>
+    </view>
+  </view>
+
+  <!-- 退出登录 -->
+  <view class="btn-container" wx:if="{{isLoggedIn}}">
+    <button class="btn btn-danger btn-block" bindtap="logout">退出登录</button>
+  </view>
+
+  <!-- 关于信息 -->
+  <view class="about-info">
+    <text class="version">版本 1.0.0</text>
+    <text class="copyright">球队管理小程序</text>
+  </view>
+</view>

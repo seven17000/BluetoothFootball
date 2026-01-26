@@ -1,0 +1,76 @@
+<view class="container">
+  <!-- 日历头部 -->
+  <view class="calendar-header">
+    <view class="header-btn" bindtap="prevMonth">
+      <text class="arrow-left"></text>
+    </view>
+    <view class="header-title">
+      <text class="year">{{currentYear}}年</text>
+      <text class="month">{{currentMonth}}月</text>
+    </view>
+    <view class="header-btn" bindtap="nextMonth">
+      <text class="arrow-right"></text>
+    </view>
+  </view>
+
+  <!-- 星期标题 -->
+  <view class="week-header">
+    <text class="week-item" wx:for="{{weekDays}}" wx:key="index">{{item}}</text>
+  </view>
+
+  <!-- 日历网格 -->
+  <view class="calendar-grid">
+    <view class="grid-item {{item.isToday ? 'today' : ''}} {{item.isCurrentMonth ? '' : 'other-month'}} {{item.selected ? 'selected' : ''}}"
+          wx:for="{{calendarDays}}"
+          wx:key="index"
+          bindtap="onDayClick"
+          data-date="{{item.dateStr}}">
+      <text class="day-text">{{item.day}}</text>
+      <view class="day-events" wx:if="{{item.events.length > 0}}">
+        <view class="event-dot {{event.typeClass}}" wx:for="{{item.events}}" wx:for-item="event" wx:key="*this"></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 图例 -->
+  <view class="legend">
+    <view class="legend-item">
+      <view class="legend-dot match"></view>
+      <text>比赛</text>
+    </view>
+    <view class="legend-item">
+      <view class="legend-dot training"></view>
+      <text>训练</text>
+    </view>
+    <view class="legend-item">
+      <view class="legend-dot meeting"></view>
+      <text>会议</text>
+    </view>
+  </view>
+
+  <!-- 当日详情 -->
+  <view class="card" wx:if="{{selectedDate}}">
+    <view class="card-title">{{selectedDate}}</view>
+    <view class="day-detail" wx:if="{{dayEvents.length > 0}}">
+      <view class="event-item {{event.typeClass}}" wx:for="{{dayEvents}}" wx:key="_id">
+        <view class="event-time">{{item.time}}</view>
+        <view class="event-info">
+          <text class="event-title">{{item.title}}</text>
+          <text class="event-desc">{{item.location || ''}}</text>
+        </view>
+        <view class="event-actions" wx:if="{{isAdmin}}">
+          <text class="action-btn" bindtap="editEvent" data-id="{{item._id}}">编辑</text>
+          <text class="action-btn delete" bindtap="deleteEvent" data-id="{{item._id}}">删除</text>
+        </view>
+      </view>
+    </view>
+    <view class="empty-text" wx:else>
+      暂无日程安排
+    </view>
+  </view>
+
+  <!-- 添加按钮 -->
+  <view class="fab" bindtap="addEvent" wx:if="{{isAdmin}}">
+    <text>+</text>
+  </view>
+</view>

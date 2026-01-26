@@ -1,0 +1,43 @@
+<view class="container">
+  <!-- 搜索框 -->
+  <view class="search-box">
+    <icon type="search" size="16" color="#999"/>
+    <input class="search-input" placeholder="搜索球员姓名/号码" bindinput="onSearch" value="{{keyword}}"/>
+  </view>
+
+  <!-- 筛选栏 -->
+  <view class="filter-bar">
+    <view class="filter-item {{position === '' ? 'active' : ''}}" bindtap="filterByPosition" data-position="">全部</view>
+    <view class="filter-item {{position === '前锋' ? 'active' : ''}}" bindtap="filterByPosition" data-position="前锋">前锋</view>
+    <view class="filter-item {{position === '中场' ? 'active' : ''}}" bindtap="filterByPosition" data-position="中场">中场</view>
+    <view class="filter-item {{position === '后卫' ? 'active' : ''}}" bindtap="filterByPosition" data-position="后卫">后卫</view>
+    <view class="filter-item {{position === '门将' ? 'active' : ''}}" bindtap="filterByPosition" data-position="门将">门将</view>
+  </view>
+
+  <!-- 球员列表 -->
+  <view class="player-list" wx:if="{{players.length > 0}}">
+    <view class="player-item" wx:for="{{players}}" wx:key="_id" bindtap="goToDetail" data-id="{{item._id}}">
+      <view class="player-number">{{item.number}}</view>
+      <view class="player-info">
+        <view class="player-name">{{item.name}}</view>
+        <view class="player-position">{{item.position}}</view>
+      </view>
+      <view class="player-tags" wx:if="{{item.tags && item.tags.length > 0}}">
+        <text class="tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
+      </view>
+      <view class="player-arrow">></view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:else>
+    <image src="/images/empty-player.png" mode="aspectFit"></image>
+    <text>暂无球员数据</text>
+    <button class="btn btn-primary mt-20" bindtap="addPlayer" wx:if="{{isAdmin}}">添加球员</button>
+  </view>
+
+  <!-- 添加按钮 -->
+  <view class="fab" bindtap="addPlayer" wx:if="{{isAdmin}}">
+    <text>+</text>
+  </view>
+</view>

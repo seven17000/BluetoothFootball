@@ -1,0 +1,226 @@
+page {
+  background-color: #f5f7fa;
+}
+
+.container {
+  padding: 20rpx;
+}
+
+/* 卡片样式 */
+.card {
+  background-color: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+}
+
+.card-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+/* 比赛头部卡片 */
+.match-header-card {
+  background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+  color: #fff;
+}
+
+.match-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+}
+
+.match-title .opponent {
+  font-size: 36rpx;
+  font-weight: bold;
+}
+
+.match-title .result {
+  font-size: 28rpx;
+  padding: 8rpx 24rpx;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 8rpx;
+}
+
+.score-board {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 30rpx;
+}
+
+.score-item {
+  text-align: center;
+}
+
+.score-item .label {
+  display: block;
+  font-size: 24rpx;
+  opacity: 0.8;
+  margin-bottom: 8rpx;
+}
+
+.score-item .score {
+  display: block;
+  font-size: 80rpx;
+  font-weight: bold;
+}
+
+.vs {
+  margin: 0 40rpx;
+  font-size: 32rpx;
+  opacity: 0.6;
+}
+
+.match-info-row {
+  display: flex;
+  justify-content: center;
+  gap: 30rpx;
+  font-size: 26rpx;
+  opacity: 0.9;
+}
+
+.edit-actions {
+  display: flex;
+  justify-content: center;
+  gap: 20rpx;
+  margin-top: 30rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid rgba(255, 255, 255, 0.2);
+}
+
+.action-btn {
+  padding: 12rpx 32rpx;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 8rpx;
+  font-size: 26rpx;
+}
+
+/* 球员表现表格 */
+.player-performance {
+  margin: -10rpx -10rpx;
+}
+
+.performance-header {
+  display: flex;
+  padding: 16rpx 10rpx;
+  background-color: #f5f7fa;
+  font-size: 24rpx;
+  color: #999;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.performance-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 10rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.performance-item:last-child {
+  border-bottom: none;
+}
+
+.col-name {
+  flex: 1;
+}
+
+.col-stat {
+  width: 100rpx;
+  text-align: center;
+  font-size: 28rpx;
+}
+
+.player-name {
+  display: block;
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 4rpx;
+}
+
+.player-pos {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.goals {
+  color: #fa5151;
+}
+
+.assists {
+  color: #1989fa;
+}
+
+.rating {
+  color: #faad14;
+  font-weight: bold;
+}
+
+.empty-text {
+  text-align: center;
+  color: #999;
+  padding: 40rpx 0;
+}
+
+/* 进球详情 */
+.goal-list {
+  margin: -10rpx 0;
+}
+
+.goal-item {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.goal-item:last-child {
+  border-bottom: none;
+}
+
+.goal-time {
+  width: 60rpx;
+  font-size: 26rpx;
+  color: #fa5151;
+  font-weight: bold;
+}
+
+.goal-scorer {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.goal-type {
+  font-size: 24rpx;
+  color: #999;
+  margin-left: 10rpx;
+}
+
+/* 备注 */
+.notes {
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.6;
+}
+
+/* 删除按钮 */
+.delete-btn {
+  margin-top: 40rpx;
+  padding: 20rpx;
+  text-align: center;
+  color: #fa5151;
+  font-size: 28rpx;
+}
+
+/* 加载状态 */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 400rpx;
+  color: #999;
+}

@@ -1,0 +1,98 @@
+<view class="container">
+  <!-- 比赛信息 -->
+  <view class="card match-info-card" wx:if="{{match}}">
+    <text class="opponent">VS {{match.opponent}}</text>
+    <text class="match-date">{{match.dateStr}}</text>
+  </view>
+
+  <!-- 球员选择 -->
+  <view class="card">
+    <view class="card-title">选择球员</view>
+    <view class="player-select">
+      <checkbox-group bindchange="onPlayerSelect">
+        <label class="player-checkbox {{selectedPlayers.includes(item._id) ? 'selected' : ''}}"
+               wx:for="{{players}}"
+               wx:key="_id"
+               data-id="{{item._id}}">
+          <checkbox value="{{item._id}}" checked="{{selectedPlayers.includes(item._id)}}"/>
+          <view class="player-info">
+            <text class="player-name">{{item.number}}号 {{item.name}}</text>
+            <text class="player-position">{{item.position}}</text>
+          </view>
+        </label>
+      </checkbox-group>
+    </view>
+  </view>
+
+  <!-- 球员数据录入 -->
+  <view class="card" wx:if="{{selectedPlayers.length > 0}}">
+    <view class="card-title">球员数据</view>
+    <view class="record-form">
+      <view class="player-record" wx:for="{{selectedPlayerRecords}}"
+            wx:key="playerId"
+            wx:for-item="record"
+            wx:for-index="idx">
+        <view class="record-header">
+          <text class="player-name">{{record.playerName}}</text>
+          <view class="position-tag">{{record.position}}</view>
+        </view>
+
+        <view class="record-fields">
+          <view class="field-item">
+            <text class="field-label">进球</text>
+            <view class="stepper">
+              <view class="stepper-btn minus" bindtap="onGoalChange" data-index="{{idx}}" data-type="minus">-</view>
+              <input class="stepper-input" type="number" value="{{record.goals}}" bindinput="onGoalInput" data-index="{{idx}}"/>
+              <view class="stepper-btn plus" bindtap="onGoalChange" data-index="{{idx}}" data-type="plus">+</view>
+            </view>
+          </view>
+
+          <view class="field-item">
+            <text class="field-label">助攻</text>
+            <view class="stepper">
+              <view class="stepper-btn minus" bindtap="onAssistChange" data-index="{{idx}}" data-type="minus">-</view>
+              <input class="stepper-input" type="number" value="{{record.assists}}" bindinput="onAssistInput" data-index="{{idx}}"/>
+              <view class="stepper-btn plus" bindtap="onAssistChange" data-index="{{idx}}" data-type="plus">+</view>
+            </view>
+          </view>
+
+          <view class="field-item">
+            <text class="field-label">黄牌</text>
+            <view class="stepper">
+              <view class="stepper-btn minus" bindtap="onYellowChange" data-index="{{idx}}" data-type="minus">-</view>
+              <input class="stepper-input" type="number" value="{{record.yellowCard}}" bindinput="onYellowInput" data-index="{{idx}}"/>
+              <view class="stepper-btn plus" bindtap="onYellowChange" data-index="{{idx}}" data-type="plus">+</view>
+            </view>
+          </view>
+
+          <view class="field-item">
+            <text class="field-label">红牌</text>
+            <view class="stepper">
+              <view class="stepper-btn minus" bindtap="onRedChange" data-index="{{idx}}" data-type="minus">-</view>
+              <input class="stepper-input" type="number" value="{{record.redCard}}" bindinput="onRedInput" data-index="{{idx}}"/>
+              <view class="stepper-btn plus" bindtap="onRedChange" data-index="{{idx}}" data-type="plus">+</view>
+            </view>
+          </view>
+
+          <view class="field-item full">
+            <text class="field-label">评分 (1-10)</text>
+            <slider class="rating-slider"
+                    min="1"
+                    max="10"
+                    step="0.5"
+                    value="{{record.rating || 5}}"
+                    activeColor="#faad14"
+                    bindchange="onRatingChange"
+                    data-index="{{idx}}"/>
+            <text class="rating-value">{{record.rating || 5}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 提交按钮 -->
+  <view class="btn-container" wx:if="{{selectedPlayers.length > 0}}">
+    <button class="btn btn-primary btn-block" bindtap="submitData">保存数据</button>
+  </view>
+</view>

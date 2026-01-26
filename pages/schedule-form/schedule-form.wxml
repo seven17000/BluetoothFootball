@@ -1,0 +1,59 @@
+<view class="container">
+  <form bindsubmit="submitForm">
+    <view class="card">
+      <view class="card-title">日程信息</view>
+
+      <view class="form-group">
+        <text class="form-label">标题 *</text>
+        <input class="form-input" name="title" value="{{formData.title}}" placeholder="请输入日程标题" bindinput="onInput" data-field="title"/>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">类型 *</text>
+        <picker mode="selector" range="{{eventTypes}}" range-key="label" bindchange="onTypeChange">
+          <view class="form-picker">
+            {{formData.typeLabel || '选择类型'}}
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">日期 *</text>
+        <picker mode="date" bindchange="onDateChange">
+          <view class="form-picker">
+            {{formData.date || '选择日期'}}
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">时间</text>
+        <picker mode="time" bindchange="onTimeChange">
+          <view class="form-picker">
+            {{formData.time || '选择时间'}}
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">地点</text>
+        <input class="form-input" name="location" value="{{formData.location}}" placeholder="请输入地点" bindinput="onInput" data-field="location"/>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">描述</text>
+        <textarea class="form-textarea" name="description" value="{{formData.description}}" placeholder="请输入描述信息" bindinput="onInput" data-field="description"></textarea>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">提醒</text>
+        <switch checked="{{formData.reminder}}" bindchange="onReminderChange" color="#1989fa"/>
+        <text class="switch-label">比赛前1小时提醒</text>
+      </view>
+    </view>
+
+    <view class="btn-container">
+      <button class="btn btn-primary btn-block" form-type="submit">{{isEdit ? '保存修改' : '添加日程'}}</button>
+    </view>
+  </form>
+</view>

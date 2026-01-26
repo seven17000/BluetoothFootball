@@ -1,0 +1,79 @@
+<view class="container" wx:if="{{match}}">
+  <!-- 比赛信息卡片 -->
+  <view class="card match-header-card">
+    <view class="match-title">
+      <text class="opponent">VS {{match.opponent}}</text>
+      <text class="result {{match.resultClass}}">{{match.result}}</text>
+    </view>
+    <view class="score-board">
+      <view class="score-item home">
+        <text class="label">我方</text>
+        <text class="score">{{match.goals}}</text>
+      </view>
+      <view class="vs">VS</view>
+      <view class="score-item away">
+        <text class="label">{{match.opponent}}</text>
+        <text class="score">{{match.conceded}}</text>
+      </view>
+    </view>
+    <view class="match-info-row">
+      <text class="info-item">{{match.dateStr}}</text>
+      <text class="info-item">{{match.isHome ? '主场' : '客场'}}</text>
+      <text class="info-item">{{match.location || '未设置场地'}}</text>
+    </view>
+    <view class="edit-actions" wx:if="{{isAdmin}}">
+      <view class="action-btn" bindtap="editMatch">编辑比赛</view>
+      <view class="action-btn" bindtap="recordStats">录入数据</view>
+    </view>
+  </view>
+
+  <!-- 球员表现列表 -->
+  <view class="card">
+    <view class="card-title">球员表现</view>
+    <view class="player-performance" wx:if="{{playerRecords.length > 0}}">
+      <view class="performance-header">
+        <text class="col-name">球员</text>
+        <text class="col-stat">进球</text>
+        <text class="col-stat">助攻</text>
+        <text class="col-stat">评分</text>
+      </view>
+      <view class="performance-item" wx:for="{{playerRecords}}" wx:key="_id">
+        <view class="col-name">
+          <text class="player-name">{{item.playerName}}</text>
+          <text class="player-pos">{{item.position}}</text>
+        </view>
+        <text class="col-stat goals">{{item.goals || 0}}</text>
+        <text class="col-stat assists">{{item.assists || 0}}</text>
+        <text class="col-stat rating">{{item.rating || '-'}}</text>
+      </view>
+    </view>
+    <view class="empty-text" wx:else>
+      暂无球员数据
+    </view>
+  </view>
+
+  <!-- 进球详情 -->
+  <view class="card" wx:if="{{goalDetails.length > 0}}">
+    <view class="card-title">进球详情</view>
+    <view class="goal-list">
+      <view class="goal-item" wx:for="{{goalDetails}}" wx:key="_id">
+        <text class="goal-time">{{item.time}}'</text>
+        <text class="goal-scorer">{{item.scorer}}</text>
+        <text class="goal-type" wx:if="{{item.assist}}">（助攻：{{item.assist}}）</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 备注 -->
+  <view class="card" wx:if="{{match.notes}}">
+    <view class="card-title">备注</view>
+    <text class="notes">{{match.notes}}</text>
+  </view>
+
+  <!-- 删除按钮 -->
+  <view class="delete-btn" bindtap="deleteMatch" wx:if="{{isAdmin}}">删除比赛</view>
+</view>
+
+<view class="loading" wx:else>
+  <text>加载中...</text>
+</view>

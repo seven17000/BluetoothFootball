@@ -1,0 +1,120 @@
+<view class="container">
+  <!-- 统计概览 -->
+  <view class="stats-grid">
+    <view class="stat-item">
+      <view class="stat-value">{{playerCount}}</view>
+      <view class="stat-label">球员总数</view>
+    </view>
+    <view class="stat-item">
+      <view class="stat-value">{{matchCount}}</view>
+      <view class="stat-label">比赛场次</view>
+    </view>
+    <view class="stat-item">
+      <view class="stat-value">{{totalGoals}}</view>
+      <view class="stat-label">总进球数</view>
+    </view>
+    <view class="stat-item">
+      <view class="stat-value">{{winRate}}</view>
+      <view class="stat-label">胜率</view>
+    </view>
+  </view>
+
+  <!-- 最近比赛 -->
+  <view class="card">
+    <view class="card-header">
+      <text class="title">最近比赛</text>
+      <view class="more" bindtap="goToMatches">查看更多 ></view>
+    </view>
+    <view class="match-list" wx:if="{{recentMatches.length > 0}}">
+      <view class="match-item" wx:for="{{recentMatches}}" wx:key="_id" bindtap="goToMatchDetail" data-id="{{item._id}}">
+        <view class="match-date">
+          <text class="date-day">{{item.day}}</text>
+          <text class="date-month">{{item.month}}月</text>
+        </view>
+        <view class="match-info">
+          <view class="match-opponent">
+            <text class="vs">VS</text>
+            <text>{{item.opponent}}</text>
+          </view>
+          <view class="match-result">
+            <text class="score">{{item.goals}}-{{item.conceded}}</text>
+            <text class="result-tag {{item.resultClass}}">{{item.result}}</text>
+          </view>
+        </view>
+        <view class="match-location">
+          <text>{{item.isHome ? '主场' : '客场'}}</text>
+        </view>
+      </view>
+    </view>
+    <view class="empty-state" wx:else>
+      <text>暂无比赛记录</text>
+      <button class="btn btn-primary mt-20" bindtap="addMatch" wx:if="{{isAdmin}}">添加比赛</button>
+    </view>
+  </view>
+
+  <!-- 即将到来的赛程 -->
+  <view class="card">
+    <view class="card-header">
+      <text class="title">即将到来的赛程</text>
+      <view class="more" bindtap="goToSchedule">查看日历 ></view>
+    </view>
+    <view class="schedule-list" wx:if="{{upcomingSchedules.length > 0}}">
+      <view class="schedule-item" wx:for="{{upcomingSchedules}}" wx:key="_id" bindtap="goToScheduleDetail" data-id="{{item._id}}">
+        <view class="schedule-date">
+          <text class="s-day">{{item.day}}</text>
+          <text class="s-month">{{item.month}}月</text>
+        </view>
+        <view class="schedule-info">
+          <text class="schedule-title">{{item.title}}</text>
+          <text class="schedule-time">{{item.time}}</text>
+        </view>
+        <view class="schedule-type tag {{item.typeClass}}">{{item.type}}</view>
+      </view>
+    </view>
+    <view class="empty-state" wx:else>
+      <text>暂无赛程安排</text>
+      <button class="btn btn-primary mt-20" bindtap="addSchedule" wx:if="{{isAdmin}}">添加赛程</button>
+    </view>
+  </view>
+
+  <!-- 射手榜TOP5 -->
+  <view class="card" wx:if="{{topScorers.length > 0}}">
+    <view class="card-header">
+      <text class="title">射手榜 TOP5</text>
+      <view class="more" bindtap="goToStats">查看更多 ></view>
+    </view>
+    <view class="top-scorer-list">
+      <view class="scorer-item" wx:for="{{topScorers}}" wx:key="index">
+        <view class="rank {{index < 3 ? 'rank-' + (index + 1) : ''}}">{{index + 1}}</view>
+        <view class="player-info">
+          <text class="player-name">{{item.name}}</text>
+          <text class="player-team">{{item.position}}</text>
+        </view>
+        <view class="goal-count">
+          <text class="goals">{{item.goals}}</text>
+          <text class="goals-label">球</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 快捷入口 -->
+  <view class="quick-entry">
+    <view class="entry-item" bindtap="goToPlayers">
+      <image src="/images/team.png" mode="aspectFit"></image>
+      <text>球员管理</text>
+    </view>
+    <view class="entry-item" bindtap="goToAttendance">
+      <image src="/images/attendance.png" mode="aspectFit"></image>
+      <text>出勤记录</text>
+    </view>
+    <view class="entry-item" bindtap="goToTraining">
+      <image src="/images/training.png" mode="aspectFit"></image>
+      <text>训练记录</text>
+    </view>
+    <view class="entry-item" bindtap="goToProfile">
+      <image src="/images/user.png" mode="aspectFit"></image>
+      <text>个人中心</text>
+    </view>
+  </view>
+</view>

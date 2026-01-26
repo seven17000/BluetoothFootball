@@ -1,0 +1,103 @@
+<view class="container">
+  <!-- 添加出勤记录 -->
+  <view class="card add-card" wx:if="{{isAdmin}}">
+    <view class="card-title">添加出勤记录</view>
+    <form bindsubmit="addRecord">
+      <view class="form-row">
+        <view class="form-group flex-1">
+          <text class="form-label">日期 *</text>
+          <picker mode="date" bindchange="onDateChange">
+            <view class="form-picker">
+              {{formData.date || '选择日期'}}
+            </view>
+          </picker>
+        </view>
+        <view class="form-group flex-1">
+          <text class="form-label">类型 *</text>
+          <picker mode="selector" range="{{eventTypes}}" range-key="label" bindchange="onEventTypeChange">
+            <view class="form-picker">
+              {{formData.eventTypeLabel || '选择类型'}}
+            </view>
+          </picker>
+        </view>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">选择球员</text>
+        <checkbox-group bindchange="onPlayerSelect">
+          <view class="player-select-list">
+            <label class="player-checkbox {{selectedPlayers.includes(item._id) ? 'selected' : ''}}"
+                   wx:for="{{players}}"
+                   wx:key="_id">
+              <checkbox value="{{item._id}}" checked="{{selectedPlayers.includes(item._id)}}"/>
+              <view class="player-info">
+                <text class="player-name">{{item.number}}号 {{item.name}}</text>
+                <text class="player-position">{{item.position}}</text>
+              </view>
+            </label>
+          </view>
+        </checkbox-group>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">出勤状态</text>
+        <radio-group class="status-radio" bindchange="onStatusChange">
+          <label class="radio-item {{formData.status === '出勤' ? 'active' : ''}}">
+            <radio value="出勤" checked="{{formData.status === '出勤'}}"/>出勤
+          </label>
+          <label class="radio-item {{formData.status === '请假' ? 'active' : ''}}">
+            <radio value="请假" checked="{{formData.status === '请假'}}"/>请假
+          </label>
+          <label class="radio-item {{formData.status === '缺勤' ? 'active' : ''}}">
+            <radio value="缺勤" checked="{{formData.status === '缺勤'}}"/>缺勤
+          </label>
+        </radio-group>
+      </view>
+
+      <view class="form-group" wx:if="{{formData.status === '请假'}}">
+        <text class="form-label">请假原因</text>
+        <input class="form-input" placeholder="请输入请假原因" value="{{formData.reason}}" bindinput="onReasonInput"/>
+      </view>
+
+      <button class="btn btn-primary btn-block" form-type="submit">添加记录</button>
+    </form>
+  </view>
+
+  <!-- 出勤记录列表 -->
+  <view class="card">
+    <view class="card-title">出勤记录</view>
+    <view class="filter-row">
+      <picker mode="selector" range="{{eventTypes}}" range-key="label" bindchange="onFilterTypeChange">
+        <view class="filter-picker">
+          {{filterTypeLabel || '全部类型'}}
+        </view>
+      </picker>
+      <picker mode="date" fields="month" bindchange="onFilterMonthChange">
+        <view class="filter-picker">
+          {{filterMonth || '全部月份'}}
+        </view>
+      </picker>
+    </view>
+
+    <view class="attendance-list" wx:if="{{attendanceRecords.length > 0}}">
+      <view class="attendance-group" wx:for="{{attendanceRecords}}" wx:key="date">
+        <view class="group-header">{{item.date}}</view>
+        <view class="group-content">
+          <view class="attendance-item" wx:for="{{item.records}}" wx:key="_id" wx:for-item="record">
+            <view class="player-info">
+              <text class="player-name">{{record.playerNumber}}号 {{record.playerName}}</text>
+              <text class="event-type">{{record.eventType}}</text>
+            </view>
+            <view class="status-info">
+              <text class="status-tag {{record.statusClass}}">{{record.status}}</text>
+              <text class="reason" wx:if="{{record.reason}}">{{record.reason}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+    <view class="empty-text" wx:else>
+      暂无出勤记录
+    </view>
+  </view>
+</view>

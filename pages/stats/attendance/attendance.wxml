@@ -1,0 +1,45 @@
+<view class="container">
+  <!-- 统计类型切换 -->
+  <view class="tab-bar">
+    <view class="tab-item {{currentTab === 'goals' ? 'active' : ''}}" bindtap="switchTab" data-tab="goals">进球榜</view>
+    <view class="tab-item {{currentTab === 'assists' ? 'active' : ''}}" bindtap="switchTab" data-tab="assists">助攻榜</view>
+    <view class="tab-item {{currentTab === 'attendance' ? 'active' : ''}}" bindtap="switchTab" data-tab="attendance">出勤榜</view>
+  </view>
+
+  <!-- 赛季筛选 -->
+  <view class="season-filter">
+    <picker mode="selector" range="{{seasons}}" bindchange="onSeasonChange">
+      <view class="filter-picker">
+        <text>{{currentSeason || '选择赛季'}}</text>
+        <text class="arrow">▼</text>
+      </view>
+    </picker>
+  </view>
+
+  <!-- 图表展示 -->
+  <view class="card chart-card">
+    <view class="card-title">出勤率排名</view>
+    <canvas canvas-id="barChart" id="barChart" class="chart-canvas"></canvas>
+  </view>
+
+  <!-- 排行榜列表 -->
+  <view class="card">
+    <view class="card-title">详细排名</view>
+    <view class="rank-list" wx:if="{{rankList.length > 0}}">
+      <view class="rank-item" wx:for="{{rankList}}" wx:key="playerId">
+        <view class="rank-num {{index < 3 ? 'top-' + (index + 1) : ''}}">{{index + 1}}</view>
+        <view class="rank-info">
+          <text class="player-name">{{item.name}}</text>
+          <text class="player-position">{{item.position}}</text>
+        </view>
+        <view class="rank-value">
+          <text class="value">{{item.rate}}%</text>
+          <text class="sub-value">({{item.present}}/{{item.total}})</text>
+        </view>
+      </view>
+    </view>
+    <view class="empty-text" wx:else>
+      暂无出勤数据
+    </view>
+  </view>
+</view>

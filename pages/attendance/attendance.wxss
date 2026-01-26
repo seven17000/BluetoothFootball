@@ -1,0 +1,226 @@
+page {
+  background-color: #f5f7fa;
+}
+
+.container {
+  padding: 20rpx;
+}
+
+/* 卡片样式 */
+.card {
+  background-color: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+}
+
+.card-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 24rpx;
+}
+
+/* 表单样式 */
+.form-row {
+  display: flex;
+  gap: 20rpx;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.form-group {
+  margin-bottom: 20rpx;
+}
+
+.form-label {
+  display: block;
+  font-size: 28rpx;
+  color: #333;
+  margin-bottom: 12rpx;
+}
+
+.form-input {
+  width: 100%;
+  padding: 20rpx;
+  border: 1rpx solid #e5e5e5;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+}
+
+.form-picker {
+  width: 100%;
+  padding: 20rpx;
+  border: 1rpx solid #e5e5e5;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  background-color: #fff;
+  box-sizing: border-box;
+  color: #333;
+}
+
+/* 球员选择 */
+.player-select-list {
+  max-height: 400rpx;
+  overflow-y: auto;
+  border: 1rpx solid #f0f0f0;
+  border-radius: 8rpx;
+}
+
+.player-checkbox {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 20rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.player-checkbox:last-child {
+  border-bottom: none;
+}
+
+.player-checkbox.selected {
+  background-color: #e6f7ff;
+}
+
+.player-checkbox checkbox {
+  margin-right: 16rpx;
+}
+
+.player-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.player-name {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.player-position {
+  font-size: 22rpx;
+  color: #999;
+}
+
+/* 状态单选 */
+.status-radio {
+  display: flex;
+  gap: 20rpx;
+}
+
+.radio-item {
+  padding: 16rpx 24rpx;
+  background-color: #f5f5f5;
+  border-radius: 8rpx;
+  font-size: 26rpx;
+  color: #666;
+}
+
+.radio-item.active {
+  background-color: #e6f7ff;
+  color: #1890ff;
+}
+
+.radio-item radio {
+  margin-right: 8rpx;
+}
+
+/* 筛选行 */
+.filter-row {
+  display: flex;
+  gap: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.filter-picker {
+  padding: 12rpx 20rpx;
+  background-color: #f5f7fa;
+  border-radius: 8rpx;
+  font-size: 26rpx;
+  color: #666;
+}
+
+/* 出勤记录列表 */
+.attendance-group {
+  margin-bottom: 20rpx;
+}
+
+.group-header {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.attendance-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.attendance-item:last-child {
+  border-bottom: none;
+}
+
+.player-info .player-name {
+  font-size: 28rpx;
+  color: #333;
+  margin-right: 16rpx;
+}
+
+.player-info .event-type {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.status-info {
+  display: flex;
+  align-items: center;
+}
+
+.status-tag {
+  font-size: 22rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 4rpx;
+}
+
+.status-tag.present {
+  background-color: #f6ffed;
+  color: #52c41a;
+}
+
+.status-tag.leave {
+  background-color: #fffbe6;
+  color: #faad14;
+}
+
+.status-tag.absent {
+  background-color: #fff2f0;
+  color: #fa5151;
+}
+
+.reason {
+  font-size: 22rpx;
+  color: #999;
+  margin-left: 16rpx;
+}
+
+.empty-text {
+  text-align: center;
+  color: #999;
+  padding: 40rpx 0;
+}
+
+/* 按钮 */
+.btn-block {
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  font-size: 32rpx;
+  margin-top: 20rpx;
+}

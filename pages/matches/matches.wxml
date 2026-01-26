@@ -1,0 +1,64 @@
+<view class="container">
+  <!-- 赛季筛选 -->
+  <view class="season-filter">
+    <picker mode="selector" range="{{seasons}}" bindchange="onSeasonChange">
+      <view class="season-picker">
+        <text>{{currentSeason || '选择赛季'}}</text>
+        <text class="arrow">▼</text>
+      </view>
+    </picker>
+  </view>
+
+  <!-- 统计概览 -->
+  <view class="stats-row">
+    <view class="stat-item">
+      <text class="value">{{stats.wins}}</text>
+      <text class="label">胜</text>
+    </view>
+    <view class="stat-item">
+      <text class="value">{{stats.draws}}</text>
+      <text class="label">平</text>
+    </view>
+    <view class="stat-item">
+      <text class="value">{{stats.losses}}</text>
+      <text class="label">负</text>
+    </view>
+    <view class="stat-item">
+      <text class="value">{{stats.goals}}-{{stats.conceded}}</text>
+      <text class="label">净胜球</text>
+    </view>
+  </view>
+
+  <!-- 比赛列表 -->
+  <view class="match-list" wx:if="{{matches.length > 0}}">
+    <view class="match-item" wx:for="{{matches}}" wx:key="_id" bindtap="goToDetail" data-id="{{item._id}}">
+      <view class="match-date-box">
+        <text class="month">{{item.month}}月</text>
+        <text class="day">{{item.day}}</text>
+      </view>
+      <view class="match-content">
+        <view class="match-header">
+          <text class="opponent">{{item.opponent}}</text>
+          <text class="result {{item.resultClass}}">{{item.result}}</text>
+        </view>
+        <view class="match-info">
+          <text class="score">{{item.goals}} - {{item.conceded}}</text>
+          <text class="location">{{item.isHome ? '主场' : '客场'}} | {{item.location || '未设置场地'}}</text>
+        </view>
+      </view>
+      <view class="match-arrow">></view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:else>
+    <image src="/images/empty-match.png" mode="aspectFit"></image>
+    <text>暂无比赛记录</text>
+    <button class="btn btn-primary mt-20" bindtap="addMatch" wx:if="{{isAdmin}}">添加比赛</button>
+  </view>
+
+  <!-- 添加按钮 -->
+  <view class="fab" bindtap="addMatch" wx:if="{{isAdmin}}">
+    <text>+</text>
+  </view>
+</view>
