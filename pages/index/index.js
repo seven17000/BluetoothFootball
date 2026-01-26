@@ -52,7 +52,7 @@ Page({
   // 加载统计数据
   async loadStats() {
     // 球员数量
-    const playersRes = await db.collection('players').where({ isActive: true }).count();
+    const playersRes = await db.collection('players').count();
     this.setData({ playerCount: playersRes.total });
 
     // 比赛数量和进球数
@@ -78,11 +78,12 @@ Page({
       .get();
 
     const recentMatches = matches.data.map(m => {
-      const date = new Date(m.matchDate);
+      const dateStr = m.matchDate;
+      const date = new Date(dateStr);
       return {
         ...m,
-        day: date.getDate(),
-        month: date.getMonth() + 1,
+        day: isNaN(date.getDate()) ? '' : date.getDate(),
+        month: isNaN(date.getMonth()) ? '' : date.getMonth() + 1,
         resultClass: m.result === '胜' ? 'win' : (m.result === '平' ? 'draw' : 'loss')
       };
     });
@@ -92,10 +93,10 @@ Page({
 
   // 加载即将到来的赛程
   async loadUpcomingSchedules() {
-    const now = new Date();
+    const now = new Date().toISOString();
     const schedules = await db.collection('schedules')
       .where({
-        date: db.command.gte(now)
+        date: _.gte(now)
       })
       .orderBy('date', 'asc')
       .limit(5)
@@ -117,40 +118,32 @@ Page({
 
   // 加载射手榜TOP5
   async loadTopScorers() {
-    // 聚合计算每个球员的进球数
-    const records = await db.collection('match_records')
-      .groupBy('playerId')
-      .sum('goals')
-      .end();
+    // 获取所有比赛记录
+    const recordsRes = await db.collection('match_records').get();
+    const records = recordsRes.data || [];
 
-    if (records && records.length > 0) {
-      const playerIds = records.map(r => r.playerId);
-      const players = await db.collection('players')
-        .where({
-          _id: db.command.in(playerIds)
-        })
-        .get();
+    // 在客户端按球员名称分组计算进球数
+    const playerGoals = {};
+    records.forEach(r => {
+      if (r.playerName && r.goals) {
+        playerGoals[r.playerName] = (playerGoals[r.playerName] || 0) + r.goals;
+      }
+    });
 
-      const playerMap = {};
-      players.data.forEach(p => {
-        playerMap[p._id] = p;
-      });
+    // 转换为数组并排序
+    const sortedPlayers = Object.entries(playerGoals)
+      .map(([playerName, goals]) => ({ playerName, goals }))
+      .sort((a, b) => b.goals - a.goals)
+      .slice(0, 5);
 
-      const topScorers = records
-        .map(r => ({
-          ...r,
-          name: playerMap[r.playerId]?.name || '未知',
-          position: playerMap[r.playerId]?.position || ''
-        }))
-        .sort((a, b) => b.sum.goals - a.sum.goals)
-        .slice(0, 5)
-        .map((r, i) => ({
-          ...r,
-          goals: r.sum?.goals || 0
-        }));
+    // 直接使用 playerName 显示
+    const topScorers = sortedPlayers.map(p => ({
+      ...p,
+      name: p.playerName,
+      position: ''
+    }));
 
-      this.setData({ topScorers });
-    }
+    this.setData({ topScorers });
   },
 
   // 跳转至比赛详情

@@ -105,11 +105,11 @@
       <text>球员管理</text>
     </view>
     <view class="entry-item" bindtap="goToAttendance">
-      <image src="/images/attendance.png" mode="aspectFit"></image>
+      <image src="/images/calendar.png" mode="aspectFit"></image>
       <text>出勤记录</text>
     </view>
     <view class="entry-item" bindtap="goToTraining">
-      <image src="/images/training.png" mode="aspectFit"></image>
+      <image src="/images/chart.png" mode="aspectFit"></image>
       <text>训练记录</text>
     </view>
     <view class="entry-item" bindtap="goToProfile">

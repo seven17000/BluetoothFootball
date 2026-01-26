@@ -6,8 +6,8 @@ const _ = db.command;
 Page({
   data: {
     matches: [],
-    seasons: ['2024-2025', '2023-2024', '2022-2023', '2021-2022'],
-    currentSeason: '',
+    seasons: ['2025-2026', '2024-2025', '2023-2024', '2022-2023', '2021-2022'],
+    currentSeason: '2024-2025',
     stats: {
       wins: 0,
       draws: 0,
@@ -19,11 +19,7 @@ Page({
   },
 
   onLoad() {
-    // 默认当前赛季
-    const year = new Date().getFullYear();
-    const month = new Date().getMonth();
-    const season = month >= 8 ? `${year}-${year + 1}` : `${year - 1}-${year}`;
-    this.setData({ currentSeason: season });
+    // 默认当前赛季已在 data 中设置
   },
 
   onShow() {
@@ -36,27 +32,29 @@ Page({
     wx.showLoading({ title: '加载中...' });
 
     try {
-      let query = db.collection('matches').orderBy('matchDate', 'desc');
+      let query = db.collection('matches');
 
       // 按赛季筛选
       if (this.data.currentSeason) {
         const [startYear, endYear] = this.data.currentSeason.split('-');
-        const startDate = new Date(parseInt(startYear), 8, 1); // 9月1日
-        const endDate = new Date(parseInt(endYear) + 1, 7, 31); // 次年8月31日
+        const startDate = new Date(parseInt(startYear), 8, 1).toISOString(); // 9月1日
+        const endDate = new Date(parseInt(endYear) + 1, 7, 31).toISOString(); // 次年8月31日
 
         query = query.where({
           matchDate: _.gte(startDate).lte(endDate)
         });
       }
 
+      query = query.orderBy('matchDate', 'desc');
       const res = await query.get();
 
       const matches = res.data.map(m => {
-        const date = new Date(m.matchDate);
+        const dateStr = m.matchDate;
+        const date = new Date(dateStr);
         return {
           ...m,
-          month: date.getMonth() + 1,
-          day: date.getDate(),
+          month: isNaN(date.getMonth()) ? '' : date.getMonth() + 1,
+          day: isNaN(date.getDate()) ? '' : date.getDate(),
           resultClass: m.result === '胜' ? 'win' : (m.result === '平' ? 'draw' : 'loss')
         };
       });

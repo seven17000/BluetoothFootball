@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(if not exist \"d:\\\\bluetooth\\\\.claude\" mkdir \"d:\\\\bluetooth\\\\.claude\")"
+      "Bash(if not exist \"d:\\\\bluetooth\\\\.claude\" mkdir \"d:\\\\bluetooth\\\\.claude\")",
+      "Bash(python -c:*)"
     ]
   }
 }

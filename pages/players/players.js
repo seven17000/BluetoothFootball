@@ -27,9 +27,7 @@ Page({
     this.setData({ isLoading: true });
 
     try {
-      let query = db.collection('players').where({
-        isActive: true
-      });
+      let query = db.collection('players');
 
       // 关键词搜索
       if (this.data.keyword) {
