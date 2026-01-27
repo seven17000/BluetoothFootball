@@ -6,8 +6,13 @@ const _ = db.command;
 Page({
   data: {
     matches: [],
-    seasons: ['2025-2026', '2024-2025', '2023-2024', '2022-2023', '2021-2022'],
-    currentSeason: '2024-2025',
+    // 年份固定为2025-2026
+    years: ['2025', '2026'],
+    months: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'],
+    startYear: '2025',
+    startMonth: '1',
+    endYear: '2026',
+    endMonth: '12',
     stats: {
       wins: 0,
       draws: 0,
@@ -16,10 +21,6 @@ Page({
       conceded: 0
     },
     isAdmin: false
-  },
-
-  onLoad() {
-    // 默认当前赛季已在 data 中设置
   },
 
   onShow() {
@@ -32,18 +33,22 @@ Page({
     wx.showLoading({ title: '加载中...' });
 
     try {
-      let query = db.collection('matches');
+      // 计算开始日期（月初）
+      const startDate = new Date(
+        parseInt(this.data.startYear),
+        parseInt(this.data.startMonth) - 1,
+        1
+      ).toISOString();
 
-      // 按赛季筛选
-      if (this.data.currentSeason) {
-        const [startYear, endYear] = this.data.currentSeason.split('-');
-        const startDate = new Date(parseInt(startYear), 8, 1).toISOString(); // 9月1日
-        const endDate = new Date(parseInt(endYear) + 1, 7, 31).toISOString(); // 次年8月31日
+      // 计算结束日期（月末）
+      const endYear = parseInt(this.data.endYear);
+      const endMonth = parseInt(this.data.endMonth);
+      const lastDay = new Date(endYear, endMonth, 0).getDate();
+      const endDate = new Date(endYear, endMonth - 1, lastDay, 23, 59, 59).toISOString();
 
-        query = query.where({
-          matchDate: _.gte(startDate).lte(endDate)
-        });
-      }
+      let query = db.collection('matches').where({
+        matchDate: _.gte(startDate).lte(endDate)
+      });
 
       query = query.orderBy('matchDate', 'desc');
       const res = await query.get();
@@ -60,12 +65,15 @@ Page({
       });
 
       // 计算统计
+      const goals = matches.reduce((sum, m) => sum + (m.goals || 0), 0);
+      const conceded = matches.reduce((sum, m) => sum + (m.conceded || 0), 0);
       const stats = {
         wins: matches.filter(m => m.result === '胜').length,
         draws: matches.filter(m => m.result === '平').length,
         losses: matches.filter(m => m.result === '负').length,
-        goals: matches.reduce((sum, m) => sum + (m.goals || 0), 0),
-        conceded: matches.reduce((sum, m) => sum + (m.conceded || 0), 0)
+        goals,
+        conceded,
+        goalDiff: goals - conceded
       };
 
       this.setData({ matches, stats });
@@ -77,11 +85,35 @@ Page({
     }
   },
 
-  // 赛季选择
-  onSeasonChange(e) {
+  // 开始年份选择
+  onStartYearChange(e) {
     const index = e.detail.value;
-    const season = this.data.seasons[index];
-    this.setData({ currentSeason: season });
+    const year = this.data.years[index];
+    this.setData({ startYear: year });
+    this.loadMatches();
+  },
+
+  // 开始月份选择
+  onStartMonthChange(e) {
+    const index = e.detail.value;
+    const month = String(index + 1);
+    this.setData({ startMonth: month });
+    this.loadMatches();
+  },
+
+  // 结束年份选择
+  onEndYearChange(e) {
+    const index = e.detail.value;
+    const year = this.data.years[index];
+    this.setData({ endYear: year });
+    this.loadMatches();
+  },
+
+  // 结束月份选择
+  onEndMonthChange(e) {
+    const index = e.detail.value;
+    const month = String(index + 1);
+    this.setData({ endMonth: month });
     this.loadMatches();
   },
 

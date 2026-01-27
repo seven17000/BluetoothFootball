@@ -8,14 +8,19 @@ Page({
   data: {
     player: null,
     matchRecords: [],
-    attendanceStats: {
-      present: 0,
-      leave: 0,
-      absent: 0
+    stats: {
+      goals: 0,
+      assists: 0,
+      matches: 0
     },
     abilityList: ABILITY_CONFIG,
     abilityTotal: 0,
-    isAdmin: false
+    isAdmin: false,
+    // 分页相关
+    page: 1,
+    pageSize: 10,
+    hasMore: true,
+    loading: false
   },
 
   onLoad(options) {
@@ -63,14 +68,15 @@ Page({
 
       this.setData({
         player,
-        abilityTotal
+        abilityTotal,
+        // 重置分页状态
+        page: 1,
+        hasMore: true,
+        matchRecords: []
       });
 
       // 加载比赛记录
       await this.loadMatchRecords();
-
-      // 加载出勤统计
-      await this.loadAttendanceStats();
 
       // 绘制雷达图
       this.drawRadarChart();
@@ -82,16 +88,29 @@ Page({
     }
   },
 
-  // 加载比赛记录（适配 goalStats/assistStats: {playerId: count} 格式）
-  async loadMatchRecords() {
+  // 加载比赛记录（适配 goalStats/assistStats: {playerId: count} 格式，支持分页）
+  async loadMatchRecords(isLoadMore = false) {
+    if (this.data.loading) return;
+
+    this.setData({ loading: true });
+
     try {
-      // 新格式：需要先获取所有比赛，再从 match_records 中筛选包含该球员的记录
       const playerId = this.data.playerId;
 
-      // 获取该球员参加过的比赛（通过正则匹配 playerId）
-      // 由于云数据库不支持对象属性查询，我们获取所有 match_records 后在客户端过滤
-      const allRecordsRes = await db.collection('match_records').get();
-      const allRecords = allRecordsRes.data || [];
+      // 先获取 match_records 总数
+      const countRes = await db.collection('match_records').count();
+      const totalRecords = countRes.total;
+
+      // 分批获取所有 match_records（get() 默认最多20条）
+      const batchSize = 20;
+      const allRecords = [];
+      for (let i = 0; i < totalRecords; i += batchSize) {
+        const batchRes = await db.collection('match_records')
+          .skip(i)
+          .limit(batchSize)
+          .get();
+        allRecords.push(...(batchRes.data || []));
+      }
 
       // 筛选包含该球员的记录
       const playerRecords = allRecords.filter(r => {
@@ -104,46 +123,94 @@ Page({
         return false;
       });
 
-      if (playerRecords.length > 0) {
-        const matchIds = playerRecords.map(r => r.matchId);
-        // 分批获取比赛信息（_.in 最多支持20个）
-        const batchSize = 20;
-        const allMatches = [];
-        for (let i = 0; i < matchIds.length; i += batchSize) {
-          const batchIds = matchIds.slice(i, i + batchSize);
-          const matches = await db.collection('matches')
-            .where({
-              _id: _.in(batchIds)
-            })
-            .get();
-          allMatches.push(...matches.data);
+      // 按 matchId 去重（同一比赛可能有多条记录）
+      const uniqueRecords = [];
+      const seenMatchIds = new Set();
+      for (const r of playerRecords) {
+        if (!seenMatchIds.has(r.matchId)) {
+          seenMatchIds.add(r.matchId);
+          uniqueRecords.push(r);
         }
-
-        const matchMap = {};
-        allMatches.forEach(m => {
-          matchMap[m._id] = m;
-        });
-
-        const matchRecords = playerRecords.map(r => {
-          const match = matchMap[r.matchId] || {};
-          const date = new Date(match.matchDate);
-          const goals = r.goalStats?.[playerId] || 0;
-          const assists = r.assistStats?.[playerId] || 0;
-          return {
-            matchId: r.matchId,
-            goals,
-            assists,
-            matchDate: `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`,
-            opponent: match.opponent || '未知',
-            result: match.result || '-',
-            resultClass: match.result === '胜' ? 'win' : (match.result === '平' ? 'draw' : 'loss')
-          };
-        });
-
-        this.setData({ matchRecords });
       }
+
+      // 获取所有比赛信息用于排序
+      const allMatchIds = uniqueRecords.map(r => r.matchId);
+      const matchBatchSize = 20;
+      const allMatches = [];
+      for (let i = 0; i < allMatchIds.length; i += matchBatchSize) {
+        const batchIds = allMatchIds.slice(i, i + matchBatchSize);
+        const matches = await db.collection('matches')
+          .where({ _id: _.in(batchIds) })
+          .get();
+        allMatches.push(...matches.data);
+      }
+
+      const matchMap = {};
+      allMatches.forEach(m => {
+        matchMap[m._id] = m;
+      });
+
+      // 按比赛日期降序排序
+      const sortedRecords = uniqueRecords.sort((a, b) => {
+        const matchA = matchMap[a.matchId] || {};
+        const matchB = matchMap[b.matchId] || {};
+        const dateA = new Date(matchA.matchDate || 0);
+        const dateB = new Date(matchB.matchDate || 0);
+        return dateB - dateA;
+      });
+
+      // 分页处理
+      const { page, pageSize } = this.data;
+      const start = (page - 1) * pageSize;
+      const end = start + pageSize;
+      const pageRecords = sortedRecords.slice(start, end);
+
+      // 计算总进球、助攻
+      let totalGoals = 0;
+      let totalAssists = 0;
+      sortedRecords.forEach(r => {
+        totalGoals += r.goalStats?.[playerId] || 0;
+        totalAssists += r.assistStats?.[playerId] || 0;
+      });
+
+      // 构建显示数据
+      const matchRecords = pageRecords.map(r => {
+        const match = matchMap[r.matchId] || {};
+        const date = new Date(match.matchDate);
+        const goals = r.goalStats?.[playerId] || 0;
+        const assists = r.assistStats?.[playerId] || 0;
+        return {
+          matchId: r.matchId,
+          goals,
+          assists,
+          matchDate: `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`,
+          opponent: match.opponent || '未知',
+          result: match.result || '-',
+          resultClass: match.result === '胜' ? 'win' : (match.result === '平' ? 'draw' : 'loss')
+        };
+      });
+
+      const totalPages = Math.ceil(sortedRecords.length / pageSize);
+
+      this.setData({
+        matchRecords: isLoadMore ? [...this.data.matchRecords, ...matchRecords] : matchRecords,
+        'stats.goals': totalGoals,
+        'stats.assists': totalAssists,
+        'stats.matches': sortedRecords.length,
+        hasMore: page < totalPages,
+        loading: false
+      });
     } catch (error) {
       console.error('加载比赛记录失败', error);
+      this.setData({ loading: false });
+    }
+  },
+
+  // 加载更多
+  onReachBottom() {
+    if (this.data.hasMore && !this.data.loading) {
+      this.setData({ page: this.data.page + 1 });
+      this.loadMatchRecords(true);
     }
   },
 
@@ -168,7 +235,14 @@ Page({
         else if (r.status === '缺勤') stats.absent++;
       });
 
-      this.setData({ attendanceStats: stats });
+      // 计算出勤率
+      const total = stats.present + stats.leave + stats.absent;
+      const attendanceRate = total > 0 ? Math.round((stats.present / total) * 100) : 0;
+
+      this.setData({
+        attendanceStats: stats,
+        'stats.attendanceRate': attendanceRate
+      });
     } catch (error) {
       console.error('加载出勤统计失败', error);
     }
@@ -177,11 +251,11 @@ Page({
   // 绘制能力值雷达图
   drawRadarChart() {
     const ctx = wx.createCanvasContext('abilityRadar', this);
-    const width = 280;
-    const height = 280;
+    const width = 280;  // Canvas 画布宽度
+    const height = 300; // Canvas 画布高度
     const centerX = width / 2;
-    const centerY = height / 2;
-    const radius = 100;
+    const centerY = height / 2 - 10;
+    const radius = 85;  // 雷达图半径（留出边距）
 
     const ability = this.data.player.ability || {};
     const values = this.data.abilityList.map(item => ability[item.key] || 0);
@@ -245,7 +319,28 @@ Page({
       ctx.fill();
     });
 
+    // 绘制能力值标签
+    ctx.setFontSize(10);
+    ctx.setFillStyle('#666');
+    this.data.abilityList.forEach((item, i) => {
+      const angle = i * angleStep - Math.PI / 2;
+      const labelR = radius + 18; // 标签位置稍向外
+      const x = centerX + Math.cos(angle) * labelR;
+      const y = centerY + Math.sin(angle) * labelR;
+      ctx.setTextAlign('center');
+      ctx.setTextBaseline('middle');
+      ctx.fillText(item.label, x, y);
+    });
+
     ctx.draw();
+  },
+
+  // 查看全部比赛记录
+  viewAllMatches() {
+    const { playerId, player } = this.data;
+    wx.navigateTo({
+      url: `/pages/player-matches/player-matches?playerId=${playerId}&playerName=${player.name || ''}`
+    });
   },
 
   // 编辑球员

@@ -1,0 +1,18 @@
+# 微信小程序
+*.log
+.apkg
+.vscode/
+
+# Node.js
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln

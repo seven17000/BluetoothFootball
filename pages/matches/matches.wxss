@@ -6,23 +6,48 @@ page {
   padding: 20rpx;
 }
 
-/* 赛季筛选 */
-.season-filter {
+/* 日期范围筛选 */
+.date-filter {
+  background-color: #fff;
+  border-radius: 16rpx;
+  padding: 20rpx 30rpx;
   margin-bottom: 20rpx;
 }
 
-.season-picker {
+.filter-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20rpx 30rpx;
-  background-color: #fff;
-  border-radius: 12rpx;
-  font-size: 28rpx;
+  padding: 16rpx 0;
 }
 
-.season-picker .arrow {
-  font-size: 20rpx;
+.filter-row:first-child {
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.filter-label {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.filter-pickers {
+  display: flex;
+  gap: 20rpx;
+}
+
+.picker {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 12rpx 20rpx;
+  background-color: #f5f7fa;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.picker .arrow {
+  font-size: 18rpx;
   color: #999;
 }
 
@@ -159,14 +184,9 @@ page {
   padding: 100rpx 40rpx;
 }
 
-.empty-state image {
-  width: 200rpx;
-  height: 200rpx;
-  margin-bottom: 20rpx;
-}
-
-.empty-state text {
+.empty-state .empty-text {
   color: #999;
+  font-size: 28rpx;
 }
 
 /* 悬浮按钮 */

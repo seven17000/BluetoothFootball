@@ -30,10 +30,6 @@
         <text class="value">{{stats.matches}}</text>
         <text class="label">出场</text>
       </view>
-      <view class="stat-item">
-        <text class="value">{{stats.attendanceRate}}%</text>
-        <text class="label">出勤率</text>
-      </view>
     </view>
   </view>
 
@@ -63,7 +59,7 @@
 
   <!-- 比赛记录卡片 -->
   <view class="card">
-    <view class="card-title">比赛记录</view>
+    <view class="card-title">比赛记录 ({{stats.matches}}场)</view>
     <view class="match-list" wx:if="{{matchRecords.length > 0}}">
       <view class="match-record" wx:for="{{matchRecords}}" wx:key="_id">
         <view class="record-date">{{item.matchDate}}</view>
@@ -77,25 +73,17 @@
         </view>
       </view>
     </view>
-    <view class="empty-text" wx:else>暂无比赛记录</view>
-  </view>
-
-  <!-- 出勤记录卡片 -->
-  <view class="card">
-    <view class="card-title">出勤记录</view>
-    <view class="attendance-stats">
-      <view class="attendance-item">
-        <text class="num">{{attendanceStats.present}}</text>
-        <text class="label">出勤</text>
-      </view>
-      <view class="attendance-item">
-        <text class="num">{{attendanceStats.leave}}</text>
-        <text class="label">请假</text>
-      </view>
-      <view class="attendance-item">
-        <text class="num">{{attendanceStats.absent}}</text>
-        <text class="label">缺勤</text>
-      </view>
+    <view class="empty-text" wx:elif="{{!loading && matchRecords.length === 0}}">暂无比赛记录</view>
+    <!-- 加载更多 -->
+    <view class="loading-more" wx:if="{{loading}}">
+      <text>加载中...</text>
+    </view>
+    <view class="loading-more" wx:elif="{{!hasMore && matchRecords.length > 0}}">
+      <text>没有更多了</text>
+    </view>
+    <!-- 查看全部按钮 -->
+    <view class="view-more" wx:if="{{stats.matches > 10}}" bindtap="viewAllMatches">
+      <text>查看全部比赛记录 ({{stats.matches}}场)</text>
     </view>
   </view>
 

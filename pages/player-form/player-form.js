@@ -23,7 +23,7 @@ Page({
         iq: 60
       }
     },
-    positions: ['前锋', '中场', '后卫', '门将'],
+    positions: ['前锋', '中场', '后卫', '边后卫', '门将'],
     allTags: [
       { value: '队长', label: '队长' },
       { value: '副队长', label: '副队长' },

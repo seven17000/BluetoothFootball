@@ -108,6 +108,15 @@ Page({
     wx.showToast({ title: '功能开发中', icon: 'none' });
   },
 
+  // 跳转至数据管理
+  goToAdmin() {
+    if (!app.isAdmin()) {
+      wx.showToast({ title: '权限不足', icon: 'none' });
+      return;
+    }
+    wx.navigateTo({ url: '/pages/admin/admin' });
+  },
+
   // 跳转至关于
   goToAbout() {
     wx.showModal({

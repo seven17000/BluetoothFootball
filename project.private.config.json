@@ -1,6 +1,6 @@
 {
   "libVersion": "3.14.1",
-  "projectname": "BluetoothFootball",
+  "projectname": "bluetooth",
   "condition": {},
   "setting": {
     "urlCheck": true,

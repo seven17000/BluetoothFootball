@@ -1,0 +1,116 @@
+page {
+  background-color: #f5f7fa;
+}
+
+.container {
+  padding: 20rpx;
+}
+
+.card {
+  background-color: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+}
+
+.card-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+
+.section {
+  margin-bottom: 30rpx;
+}
+
+.section:last-child {
+  margin-bottom: 0;
+}
+
+.section-title {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+.step-list {
+  background-color: #f5f7fa;
+  border-radius: 8rpx;
+  padding: 20rpx;
+}
+
+.step-list text {
+  display: block;
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.8;
+}
+
+.result-info {
+  background-color: #f6ffed;
+  border-radius: 8rpx;
+  padding: 20rpx;
+}
+
+.result-info text {
+  display: block;
+  font-size: 26rpx;
+  color: #333;
+  line-height: 1.8;
+}
+
+.fail-item {
+  font-size: 24rpx;
+  color: #fa5151;
+  margin-left: 20rpx;
+}
+
+.stats-row {
+  display: flex;
+  justify-content: space-around;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-item .value {
+  display: block;
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #1989fa;
+}
+
+.stat-item .label {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 按钮样式 */
+.btn {
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  text-align: center;
+  border-radius: 12rpx;
+  font-size: 30rpx;
+  margin-bottom: 20rpx;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border: none;
+}
+
+.btn-outline {
+  background-color: #fff;
+  color: #1989fa;
+  border: 1rpx solid #1989fa;
+}
+
+.mt-20 {
+  margin-top: 20rpx;
+}

@@ -1,0 +1,154 @@
+/* pages/player-matches/player-matches.wxss */
+.container {
+  padding: 20rpx;
+}
+
+/* 统计卡片 */
+.stats-card {
+  padding: 30rpx;
+}
+
+.stats-title {
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 20rpx;
+}
+
+.stats-row {
+  display: flex;
+  justify-content: space-around;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-item .value {
+  display: block;
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #1989fa;
+}
+
+.stat-item .label {
+  font-size: 24rpx;
+  color: #999;
+}
+
+/* 比赛列表 */
+.card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.card-title {
+  font-size: 30rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+  padding-bottom: 20rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.match-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.match-item:last-child {
+  border-bottom: none;
+}
+
+.match-date {
+  width: 140rpx;
+  font-size: 24rpx;
+  color: #999;
+  flex-shrink: 0;
+}
+
+.match-info {
+  flex: 1;
+}
+
+.opponent-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10rpx;
+}
+
+.opponent {
+  font-size: 28rpx;
+  color: #333;
+  font-weight: 500;
+}
+
+.result {
+  margin-left: 20rpx;
+  font-size: 24rpx;
+  padding: 4rpx 16rpx;
+  border-radius: 8rpx;
+}
+
+.result.win {
+  background: #e8f5e9;
+  color: #52c41a;
+}
+
+.result.draw {
+  background: #fff7e6;
+  color: #faad14;
+}
+
+.result.loss {
+  background: #fff1f0;
+  color: #fa5151;
+}
+
+.stats-row {
+  display: flex;
+  gap: 16rpx;
+}
+
+.stat-tag {
+  font-size: 22rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 8rpx;
+}
+
+.stat-tag.goal {
+  background: #e6f7ff;
+  color: #1890fa;
+}
+
+.stat-tag.assist {
+  background: #f9f0ff;
+  color: #722ed1;
+}
+
+.arrow {
+  font-size: 28rpx;
+  color: #ccc;
+  padding-left: 20rpx;
+}
+
+/* 空状态 */
+.empty-text {
+  text-align: center;
+  padding: 60rpx 0;
+  color: #999;
+  font-size: 28rpx;
+}
+
+/* 加载状态 */
+.loading-more,
+.no-more {
+  text-align: center;
+  padding: 30rpx 0;
+  color: #999;
+  font-size: 26rpx;
+}

@@ -6,6 +6,42 @@ page {
   padding: 20rpx;
 }
 
+/* 简洁统计栏 */
+.stats-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  color: #fff;
+}
+
+.stat-item {
+  text-align: center;
+  flex: 1;
+}
+
+.stat-divider {
+  width: 1rpx;
+  height: 60rpx;
+  background: rgba(255, 255, 255, 0.3);
+  margin: 0 40rpx;
+}
+
+.stats-bar .stat-value {
+  font-size: 48rpx;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 8rpx;
+}
+
+.stats-bar .stat-label {
+  font-size: 24rpx;
+  opacity: 0.9;
+}
+
 /* 统计网格 */
 .stats-grid {
   display: flex;
@@ -14,7 +50,7 @@ page {
   margin-bottom: 20rpx;
 }
 
-.stat-item {
+.stats-grid .stat-item {
   width: calc(50% - 10rpx);
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 16rpx;
@@ -24,18 +60,18 @@ page {
   color: #fff;
 }
 
-.stat-item:nth-child(3),
-.stat-item:nth-child(4) {
+.stats-grid .stat-item:nth-child(3),
+.stats-grid .stat-item:nth-child(4) {
   background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
 
-.stat-value {
+.stats-grid .stat-value {
   font-size: 48rpx;
   font-weight: bold;
   margin-bottom: 10rpx;
 }
 
-.stat-label {
+.stats-grid .stat-label {
   font-size: 24rpx;
   opacity: 0.9;
 }
@@ -330,4 +366,34 @@ page {
   text-align: center;
   padding: 40rpx 0;
   color: #999;
+}
+
+.empty-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 16rpx;
+}
+
+.empty-desc {
+  display: block;
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 30rpx;
+}
+
+.empty-steps {
+  text-align: left;
+  background-color: #f5f7fa;
+  border-radius: 12rpx;
+  padding: 24rpx 30rpx;
+  margin-top: 20rpx;
+}
+
+.empty-steps text {
+  display: block;
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.8;
 }

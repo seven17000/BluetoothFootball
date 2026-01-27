@@ -1,12 +1,40 @@
 <view class="container">
-  <!-- 赛季筛选 -->
-  <view class="season-filter">
-    <picker mode="selector" range="{{seasons}}" bindchange="onSeasonChange">
-      <view class="season-picker">
-        <text>{{currentSeason || '选择赛季'}}</text>
-        <text class="arrow">▼</text>
+  <!-- 月份范围筛选 -->
+  <view class="date-filter">
+    <view class="filter-row">
+      <text class="filter-label">开始时间</text>
+      <view class="filter-pickers">
+        <picker mode="selector" range="{{years}}" bindchange="onStartYearChange">
+          <view class="picker">
+            <text>{{startYear}}年</text>
+            <text class="arrow">▼</text>
+          </view>
+        </picker>
+        <picker mode="selector" range="{{months}}" bindchange="onStartMonthChange">
+          <view class="picker">
+            <text>{{startMonth}}月</text>
+            <text class="arrow">▼</text>
+          </view>
+        </picker>
       </view>
-    </picker>
+    </view>
+    <view class="filter-row">
+      <text class="filter-label">结束时间</text>
+      <view class="filter-pickers">
+        <picker mode="selector" range="{{years}}" bindchange="onEndYearChange">
+          <view class="picker">
+            <text>{{endYear}}年</text>
+            <text class="arrow">▼</text>
+          </view>
+        </picker>
+        <picker mode="selector" range="{{months}}" bindchange="onEndMonthChange">
+          <view class="picker">
+            <text>{{endMonth}}月</text>
+            <text class="arrow">▼</text>
+          </view>
+        </picker>
+      </view>
+    </view>
   </view>
 
   <!-- 统计概览 -->
@@ -24,7 +52,7 @@
       <text class="label">负</text>
     </view>
     <view class="stat-item">
-      <text class="value">{{stats.goals}}-{{stats.conceded}}</text>
+      <text class="value {{stats.goalDiff >= 0 ? 'positive' : 'negative'}}">{{stats.goalDiff >= 0 ? '+' : ''}}{{stats.goalDiff}}</text>
       <text class="label">净胜球</text>
     </view>
   </view>
@@ -52,8 +80,7 @@
 
   <!-- 空状态 -->
   <view class="empty-state" wx:else>
-    <image src="/images/empty-match.png" mode="aspectFit"></image>
-    <text>暂无比赛记录</text>
+    <text class="empty-text">暂无比赛记录</text>
     <button class="btn btn-primary mt-20" bindtap="addMatch" wx:if="{{isAdmin}}">添加比赛</button>
   </view>
 

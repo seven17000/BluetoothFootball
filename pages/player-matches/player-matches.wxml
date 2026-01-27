@@ -1,0 +1,60 @@
+<view class="container">
+  <!-- 统计概览 -->
+  <view class="card stats-card">
+    <view class="stats-title">数据概览</view>
+    <view class="stats-row">
+      <view class="stat-item">
+        <text class="value">{{stats.goals}}</text>
+        <text class="label">进球</text>
+      </view>
+      <view class="stat-item">
+        <text class="value">{{stats.assists}}</text>
+        <text class="label">助攻</text>
+      </view>
+      <view class="stat-item">
+        <text class="value">{{stats.matches}}</text>
+        <text class="label">出场</text>
+      </view>
+      <view class="stat-item">
+        <text class="value">{{stats.goalsPerMatch}}</text>
+        <text class="label">场均进球</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 比赛记录列表 -->
+  <view class="card">
+    <view class="card-title">比赛记录</view>
+    <view class="match-list" wx:if="{{matchRecords.length > 0}}">
+      <view class="match-item" wx:for="{{matchRecords}}" wx:key="matchId" bindtap="viewMatchDetail" data-match-id="{{item.matchId}}">
+        <view class="match-date">{{item.matchDate}}</view>
+        <view class="match-info">
+          <view class="opponent-row">
+            <text class="opponent">VS {{item.opponent}}</text>
+            <text class="result {{item.resultClass}}">{{item.result}}</text>
+          </view>
+          <view class="stats-row">
+            <view class="stat-tag goal" wx:if="{{item.goals > 0}}">
+              <text>{{item.goals}}球</text>
+            </view>
+            <view class="stat-tag assist" wx:if="{{item.assists > 0}}">
+              <text>{{item.assists}}助攻</text>
+            </view>
+          </view>
+        </view>
+        <view class="arrow">></view>
+      </view>
+    </view>
+    <view class="empty-text" wx:else>
+      暂无比赛记录
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view class="loading-more" wx:if="{{loading}}">
+    <text>加载中...</text>
+  </view>
+  <view class="no-more" wx:elif="{{!hasMore && matchRecords.length > 0}}">
+    <text>没有更多了</text>
+  </view>
+</view>

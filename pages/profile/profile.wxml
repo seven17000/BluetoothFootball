@@ -52,6 +52,14 @@
       <text class="menu-arrow">></text>
     </view>
 
+    <view class="menu-item" wx:if="{{isAdmin}}" bindtap="goToAdmin">
+      <view class="menu-left">
+        <text class="menu-icon">⚙️</text>
+        <text class="menu-text">数据管理</text>
+      </view>
+      <text class="menu-arrow">></text>
+    </view>
+
     <view class="menu-item" bindtap="goToAbout">
       <view class="menu-left">
         <text class="menu-icon">ℹ️</text>

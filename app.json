@@ -4,6 +4,7 @@
     "pages/players/players",
     "pages/player-detail/player-detail",
     "pages/player-form/player-form",
+    "pages/player-matches/player-matches",
     "pages/matches/matches",
     "pages/match-detail/match-detail",
     "pages/match-form/match-form",

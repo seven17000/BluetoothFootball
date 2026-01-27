@@ -1,21 +1,27 @@
 <view class="container">
   <!-- 统计概览 -->
-  <view class="stats-grid">
+  <view class="stats-bar">
     <view class="stat-item">
-      <view class="stat-value">{{playerCount}}</view>
-      <view class="stat-label">球员总数</view>
+      <text class="stat-value">{{teamDays}}</text>
+      <text class="stat-label">球队成立天数</text>
     </view>
+    <view class="stat-divider"></view>
     <view class="stat-item">
-      <view class="stat-value">{{matchCount}}</view>
-      <view class="stat-label">比赛场次</view>
+      <text class="stat-value">{{playerCount}}</text>
+      <text class="stat-label">球员数量</text>
     </view>
-    <view class="stat-item">
-      <view class="stat-value">{{totalGoals}}</view>
-      <view class="stat-label">总进球数</view>
-    </view>
-    <view class="stat-item">
-      <view class="stat-value">{{winRate}}</view>
-      <view class="stat-label">胜率</view>
+  </view>
+
+  <!-- 暂无数据提示 -->
+  <view class="card" wx:if="{{playerCount === 0 && isAdmin}}">
+    <view class="empty-state">
+      <text class="empty-title">欢迎使用球队管理</text>
+      <text class="empty-desc">请先添加球员和比赛数据</text>
+      <view class="empty-steps">
+        <text>1. 进入"球员"页面添加球员</text>
+        <text>2. 进入"数据"页面添加比赛</text>
+        <text>3. 在比赛详情中录入球员数据</text>
+      </view>
     </view>
   </view>
 
@@ -52,6 +58,48 @@
     </view>
   </view>
 
+  <!-- 射手榜TOP3 -->
+  <view class="card" wx:if="{{topScorers.length > 0}}">
+    <view class="card-header">
+      <text class="title">射手榜 TOP3</text>
+      <view class="more" bindtap="goToStats">查看更多 ></view>
+    </view>
+    <view class="top-scorer-list">
+      <view class="scorer-item" wx:for="{{topScorers}}" wx:key="index" wx:if="{{index < 3}}">
+        <view class="rank {{index < 3 ? 'rank-' + (index + 1) : ''}}">{{index + 1}}</view>
+        <view class="player-info">
+          <text class="player-name">{{item.name}}</text>
+          <text class="player-team">{{item.position}}</text>
+        </view>
+        <view class="goal-count">
+          <text class="goals">{{item.goals}}</text>
+          <text class="goals-label">球</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 助攻榜TOP3 -->
+  <view class="card" wx:if="{{topAssists.length > 0}}">
+    <view class="card-header">
+      <text class="title">助攻榜 TOP3</text>
+      <view class="more" bindtap="goToStats">查看更多 ></view>
+    </view>
+    <view class="top-scorer-list">
+      <view class="scorer-item" wx:for="{{topAssists}}" wx:key="index" wx:if="{{index < 3}}">
+        <view class="rank {{index < 3 ? 'rank-' + (index + 1) : ''}}">{{index + 1}}</view>
+        <view class="player-info">
+          <text class="player-name">{{item.name}}</text>
+          <text class="player-team">{{item.position}}</text>
+        </view>
+        <view class="goal-count">
+          <text class="goals">{{item.assists}}</text>
+          <text class="goals-label">助攻</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
   <!-- 即将到来的赛程 -->
   <view class="card">
     <view class="card-header">
@@ -74,47 +122,6 @@
     <view class="empty-state" wx:else>
       <text>暂无赛程安排</text>
       <button class="btn btn-primary mt-20" bindtap="addSchedule" wx:if="{{isAdmin}}">添加赛程</button>
-    </view>
-  </view>
-
-  <!-- 射手榜TOP5 -->
-  <view class="card" wx:if="{{topScorers.length > 0}}">
-    <view class="card-header">
-      <text class="title">射手榜 TOP5</text>
-      <view class="more" bindtap="goToStats">查看更多 ></view>
-    </view>
-    <view class="top-scorer-list">
-      <view class="scorer-item" wx:for="{{topScorers}}" wx:key="index">
-        <view class="rank {{index < 3 ? 'rank-' + (index + 1) : ''}}">{{index + 1}}</view>
-        <view class="player-info">
-          <text class="player-name">{{item.name}}</text>
-          <text class="player-team">{{item.position}}</text>
-        </view>
-        <view class="goal-count">
-          <text class="goals">{{item.goals}}</text>
-          <text class="goals-label">球</text>
-        </view>
-      </view>
-    </view>
-  </view>
-
-  <!-- 快捷入口 -->
-  <view class="quick-entry">
-    <view class="entry-item" bindtap="goToPlayers">
-      <image src="/images/team.png" mode="aspectFit"></image>
-      <text>球员管理</text>
-    </view>
-    <view class="entry-item" bindtap="goToAttendance">
-      <image src="/images/calendar.png" mode="aspectFit"></image>
-      <text>出勤记录</text>
-    </view>
-    <view class="entry-item" bindtap="goToTraining">
-      <image src="/images/chart.png" mode="aspectFit"></image>
-      <text>训练记录</text>
-    </view>
-    <view class="entry-item" bindtap="goToProfile">
-      <image src="/images/user.png" mode="aspectFit"></image>
-      <text>个人中心</text>
     </view>
   </view>
 </view>

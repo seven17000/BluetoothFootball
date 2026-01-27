@@ -7,6 +7,7 @@ const POSITIONS = [
   { value: '前锋', label: '前锋' },
   { value: '中场', label: '中场' },
   { value: '后卫', label: '后卫' },
+  { value: '边后卫', label: '边后卫' },
   { value: '门将', label: '门将' }
 ];
 
@@ -108,6 +109,8 @@ module.exports = {
   POSITIONS,
   MATCH_RESULTS,
   ATTENDANCE_STATUS,
+  PLAYER_TAGS,
+  ABILITY_CONFIG,
   EVENT_TYPES,
   ROLES,
   SEASONS,

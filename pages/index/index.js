@@ -3,15 +3,17 @@ const app = getApp();
 const db = wx.cloud.database();
 const _ = db.command;
 
+// 球队成立日期
+const TEAM_FOUNDED_DATE = new Date('2001-01-01');
+
 Page({
   data: {
+    teamDays: 0,      // 球队成立天数
     playerCount: 0,
-    matchCount: 0,
-    totalGoals: 0,
-    winRate: '0%',
     recentMatches: [],
     upcomingSchedules: [],
     topScorers: [],
+    topAssists: [],
     isAdmin: false
   },
 
@@ -39,7 +41,8 @@ Page({
         this.loadStats(),
         this.loadRecentMatches(),
         this.loadUpcomingSchedules(),
-        this.loadTopScorers()
+        this.loadTopScorers(),
+        this.loadTopAssists()
       ]);
     } catch (error) {
       console.error('加载数据失败', error);
@@ -51,21 +54,16 @@ Page({
 
   // 加载统计数据
   async loadStats() {
+    // 计算球队成立天数
+    const now = new Date();
+    const teamDays = Math.floor((now - TEAM_FOUNDED_DATE) / (1000 * 60 * 60 * 24));
+
     // 球员数量
     const playersRes = await db.collection('players').count();
-    this.setData({ playerCount: playersRes.total });
-
-    // 比赛数量和进球数
-    const matchesRes = await db.collection('matches').count();
-    const matches = await db.collection('matches').get();
-    const totalGoals = matches.data.reduce((sum, m) => sum + (m.goals || 0), 0);
-    const wins = matches.data.filter(m => m.result === '胜').length;
-    const winRate = matchesRes.total > 0 ? Math.round((wins / matchesRes.total) * 100) + '%' : '0%';
 
     this.setData({
-      matchCount: matchesRes.total,
-      totalGoals,
-      winRate
+      teamDays,
+      playerCount: playersRes.total
     });
   },
 
@@ -233,6 +231,104 @@ Page({
     } catch (error) {
       console.error('加载射手榜失败:', error);
       this.setData({ topScorers: [] });
+    }
+  },
+
+  // 加载助攻榜TOP3
+  async loadTopAssists() {
+    try {
+      const startDate = new Date(2025, 0, 1).toISOString();
+      const endDate = new Date(2026, 11, 31, 23, 59, 59).toISOString();
+
+      const countRes = await db.collection('matches')
+        .where({
+          matchDate: _.gte(startDate).lte(endDate)
+        })
+        .count();
+      const totalMatches = countRes.total;
+
+      const batchSize = 20;
+      const allMatches = [];
+      for (let i = 0; i < totalMatches; i += batchSize) {
+        const matchesBatch = await db.collection('matches')
+          .where({
+            matchDate: _.gte(startDate).lte(endDate)
+          })
+          .skip(i)
+          .limit(batchSize)
+          .get();
+        allMatches.push(...matchesBatch.data);
+      }
+
+      if (allMatches.length === 0) {
+        this.setData({ topAssists: [] });
+        return;
+      }
+
+      const matchIds = allMatches.map(m => m._id);
+
+      const recordBatchSize = 20;
+      const allRecords = [];
+      for (let i = 0; i < matchIds.length; i += recordBatchSize) {
+        const batchIds = matchIds.slice(i, i + recordBatchSize);
+        const recordsRes = await db.collection('match_records')
+          .where({
+            matchId: _.in(batchIds)
+          })
+          .get();
+        allRecords.push(...(recordsRes.data || []));
+      }
+
+      if (allRecords.length === 0) {
+        this.setData({ topAssists: [] });
+        return;
+      }
+
+      // 按球员ID分组计算助攻数
+      const playerAssists = {};
+      allRecords.forEach(r => {
+        if (r.assistStats && typeof r.assistStats === 'object') {
+          Object.entries(r.assistStats).forEach(([playerId, count]) => {
+            playerAssists[playerId] = (playerAssists[playerId] || 0) + count;
+          });
+        }
+      });
+
+      const playerIds = Object.keys(playerAssists);
+      if (playerIds.length === 0) {
+        this.setData({ topAssists: [] });
+        return;
+      }
+
+      const playersRes = await db.collection('players')
+        .where({
+          _id: _.in(playerIds)
+        })
+        .get();
+      const players = playersRes.data || [];
+
+      const playerMap = {};
+      players.forEach(p => {
+        playerMap[p._id] = p;
+      });
+
+      const sortedPlayers = Object.entries(playerAssists)
+        .map(([playerId, assists]) => {
+          const player = playerMap[playerId] || {};
+          return {
+            playerId,
+            name: player.name || '未知',
+            position: player.position || '',
+            assists
+          };
+        })
+        .sort((a, b) => b.assists - a.assists)
+        .slice(0, 3);
+
+      this.setData({ topAssists: sortedPlayers });
+    } catch (error) {
+      console.error('加载助攻榜失败:', error);
+      this.setData({ topAssists: [] });
     }
   },
 
