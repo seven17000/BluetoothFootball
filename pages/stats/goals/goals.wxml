@@ -1,57 +1,14 @@
 <view class="container">
   <!-- 统计类型切换 -->
   <view class="tab-bar">
-    <view class="tab-item {{currentTab === 'goals' ? 'active' : ''}}" bindtap="switchTab" data-tab="goals">进球榜</view>
-    <view class="tab-item {{currentTab === 'assists' ? 'active' : ''}}" bindtap="switchTab" data-tab="assists">助攻榜</view>
+    <view class="tab-item {{currentTab === 'goals' ? 'active' : ''}}" bindtap="switchTab" data-tab="goals">进球</view>
+    <view class="tab-item {{currentTab === 'assists' ? 'active' : ''}}" bindtap="switchTab" data-tab="assists">助攻</view>
+    <view class="tab-item {{currentTab === 'matches' ? 'active' : ''}}" bindtap="switchTab" data-tab="matches">比赛</view>
   </view>
 
-  <!-- 月份范围筛选 -->
-  <view class="date-filter">
-    <view class="filter-row">
-      <text class="filter-label">开始时间</text>
-      <view class="filter-pickers">
-        <picker mode="selector" range="{{years}}" bindchange="onStartYearChange">
-          <view class="picker">
-            <text>{{startYear}}年</text>
-            <text class="arrow">▼</text>
-          </view>
-        </picker>
-        <picker mode="selector" range="{{months}}" bindchange="onStartMonthChange">
-          <view class="picker">
-            <text>{{startMonth}}月</text>
-            <text class="arrow">▼</text>
-          </view>
-        </picker>
-      </view>
-    </view>
-    <view class="filter-row">
-      <text class="filter-label">结束时间</text>
-      <view class="filter-pickers">
-        <picker mode="selector" range="{{years}}" bindchange="onEndYearChange">
-          <view class="picker">
-            <text>{{endYear}}年</text>
-            <text class="arrow">▼</text>
-          </view>
-        </picker>
-        <picker mode="selector" range="{{months}}" bindchange="onEndMonthChange">
-          <view class="picker">
-            <text>{{endMonth}}月</text>
-            <text class="arrow">▼</text>
-          </view>
-        </picker>
-      </view>
-    </view>
-  </view>
-
-  <!-- 图表展示 -->
-  <view class="card chart-card">
+  <!-- 排行榜列表（进球/助攻） -->
+  <view class="card" wx:if="{{currentTab !== 'matches'}}">
     <view class="card-title">{{chartTitle}}</view>
-    <canvas canvas-id="barChart" id="barChart" class="chart-canvas"></canvas>
-  </view>
-
-  <!-- 排行榜列表 -->
-  <view class="card">
-    <view class="card-title">详细排名</view>
     <view class="rank-list" wx:if="{{rankList.length > 0}}">
       <view class="rank-item" wx:for="{{rankList}}" wx:key="playerId">
         <view class="rank-num {{index < 3 ? 'top-' + (index + 1) : ''}}">{{index + 1}}</view>
@@ -70,22 +27,38 @@
     </view>
   </view>
 
-  <!-- 统计摘要 -->
-  <view class="card summary-card">
-    <view class="summary-title">数据统计</view>
-    <view class="summary-stats">
-      <view class="summary-item">
-        <text class="value">{{summary.total}}</text>
-        <text class="label">总{{currentTab === 'goals' ? '进球' : '助攻'}}</text>
+  <!-- 比赛列表 -->
+  <view class="card" wx:if="{{currentTab === 'matches'}}">
+    <view class="card-title">比赛记录</view>
+    <view class="match-list" wx:if="{{matchList.length > 0}}">
+      <view class="match-item" wx:for="{{matchList}}" wx:key="_id" bindtap="goToDetail" data-id="{{item._id}}">
+        <view class="match-date-box">
+          <text class="month">{{item.month}}月</text>
+          <text class="day">{{item.day}}</text>
+        </view>
+        <view class="match-content">
+          <view class="match-header">
+            <text class="opponent">{{item.opponent}}</text>
+            <text class="result {{item.resultClass}}">{{item.result}}</text>
+          </view>
+          <view class="match-info">
+            <text class="score">{{item.goals}} - {{item.conceded}}</text>
+            <text class="location">{{item.isHome ? '主场' : '客场'}}</text>
+          </view>
+        </view>
+        <view class="match-arrow">></view>
       </view>
-      <view class="summary-item">
-        <text class="value">{{summary.avg}}</text>
-        <text class="label">场均</text>
-      </view>
-      <view class="summary-item">
-        <text class="value">{{summary.topPlayer}}</text>
-        <text class="label">榜首</text>
-      </view>
+    </view>
+    <view class="empty-text" wx:else>
+      暂无比赛记录
+    </view>
+    <!-- 加载更多 -->
+    <view class="loading-tip" wx:if="{{hasMoreMatch}}">
+      <text wx:if="{{isLoading}}">加载中...</text>
+      <text wx:else>上拉加载更多</text>
+    </view>
+    <view class="loading-tip" wx:if="{{!hasMoreMatch && matchList.length > 0}}">
+      <text>没有更多了</text>
     </view>
   </view>
 </view>

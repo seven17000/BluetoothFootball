@@ -1,42 +1,4 @@
 <view class="container">
-  <!-- 月份范围筛选 -->
-  <view class="date-filter">
-    <view class="filter-row">
-      <text class="filter-label">开始时间</text>
-      <view class="filter-pickers">
-        <picker mode="selector" range="{{years}}" bindchange="onStartYearChange">
-          <view class="picker">
-            <text>{{startYear}}年</text>
-            <text class="arrow">▼</text>
-          </view>
-        </picker>
-        <picker mode="selector" range="{{months}}" bindchange="onStartMonthChange">
-          <view class="picker">
-            <text>{{startMonth}}月</text>
-            <text class="arrow">▼</text>
-          </view>
-        </picker>
-      </view>
-    </view>
-    <view class="filter-row">
-      <text class="filter-label">结束时间</text>
-      <view class="filter-pickers">
-        <picker mode="selector" range="{{years}}" bindchange="onEndYearChange">
-          <view class="picker">
-            <text>{{endYear}}年</text>
-            <text class="arrow">▼</text>
-          </view>
-        </picker>
-        <picker mode="selector" range="{{months}}" bindchange="onEndMonthChange">
-          <view class="picker">
-            <text>{{endMonth}}月</text>
-            <text class="arrow">▼</text>
-          </view>
-        </picker>
-      </view>
-    </view>
-  </view>
-
   <!-- 统计概览 -->
   <view class="stats-row">
     <view class="stat-item">
@@ -52,8 +14,8 @@
       <text class="label">负</text>
     </view>
     <view class="stat-item">
-      <text class="value {{stats.goalDiff >= 0 ? 'positive' : 'negative'}}">{{stats.goalDiff >= 0 ? '+' : ''}}{{stats.goalDiff}}</text>
-      <text class="label">净胜球</text>
+      <text class="value {{stats.goalDiff >= 0 ? 'positive' : 'negative'}}">{{stats.goals}}/{{stats.conceded}}</text>
+      <text class="label">进球/丢球</text>
     </view>
   </view>
 
@@ -82,6 +44,15 @@
   <view class="empty-state" wx:else>
     <text class="empty-text">暂无比赛记录</text>
     <button class="btn btn-primary mt-20" bindtap="addMatch" wx:if="{{isAdmin}}">添加比赛</button>
+  </view>
+
+  <!-- 加载更多提示 -->
+  <view class="loading-tip" wx:if="{{hasMore}}">
+    <text wx:if="{{isLoading}}">加载中...</text>
+    <text wx:else>上拉加载更多</text>
+  </view>
+  <view class="loading-tip" wx:if="{{!hasMore && matches.length > 0}}">
+    <text>没有更多了</text>
   </view>
 
   <!-- 添加按钮 -->

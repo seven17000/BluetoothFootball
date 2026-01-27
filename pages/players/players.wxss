@@ -122,9 +122,8 @@ page {
   padding: 100rpx 40rpx;
 }
 
-.empty-state image {
-  width: 200rpx;
-  height: 200rpx;
+.empty-state .empty-icon {
+  font-size: 120rpx;
   margin-bottom: 20rpx;
 }
 

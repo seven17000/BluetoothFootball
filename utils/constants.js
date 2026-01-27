@@ -39,14 +39,30 @@ const PLAYER_TAGS = [
   { value: '精神领袖', label: '精神领袖' }
 ];
 
-// 能力值配置
+// 能力值配置（雷达图展示：力量，速度，体能，强壮，防守，射门）
 const ABILITY_CONFIG = [
   { key: 'power', label: '力量', icon: '💪' },
-  { key: 'stamina', label: '体能', icon: '⚡' },
+  { key: 'speed', label: '速度', icon: '⚡' },
+  { key: 'stamina', label: '体能', icon: '🔥' },
+  { key: 'strength', label: '强壮', icon: '🦾' },
+  { key: 'defense', label: '防守', icon: '🛡️' },
+  { key: 'shooting', label: '射门', icon: '⚽' }
+];
+
+// 表单中的所有能力字段
+const FORM_ABILITY_CONFIG = [
+  { key: 'power', label: '力量', icon: '💪' },
+  { key: 'speed', label: '速度', icon: '⚡' },
+  { key: 'stamina', label: '体能', icon: '🔥' },
+  { key: 'strength', label: '强壮', icon: '🦾' },
   { key: 'shooting', label: '射门', icon: '⚽' },
-  { key: 'dribbling', label: '盘带', icon: '🏃' },
-  { key: 'technique', label: '技巧', icon: '🎯' },
-  { key: 'iq', label: '球商', icon: '🧠' }
+  { key: 'defense', label: '防守', icon: '🛡️' },
+  { key: 'mentality', label: '心态', icon: '🧠' },
+  { key: 'awareness', label: '意识', icon: '👁️' },
+  { key: 'technique', label: '基本功', icon: '🎯' },
+  { key: 'duel', label: '对抗', icon: '🤼' },
+  { key: 'explosion', label: '爆发', icon: '💥' },
+  { key: 'spirit', label: '精神', icon: '⭐' }
 ];
 
 // 活动类型
@@ -111,6 +127,7 @@ module.exports = {
   ATTENDANCE_STATUS,
   PLAYER_TAGS,
   ABILITY_CONFIG,
+  FORM_ABILITY_CONFIG,
   EVENT_TYPES,
   ROLES,
   SEASONS,

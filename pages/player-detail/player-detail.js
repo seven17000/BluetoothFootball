@@ -2,7 +2,7 @@
 const app = getApp();
 const db = wx.cloud.database();
 const _ = db.command;
-const { ABILITY_CONFIG } = require('../../utils/constants.js');
+const { ABILITY_CONFIG, FORM_ABILITY_CONFIG } = require('../../utils/constants.js');
 
 Page({
   data: {
@@ -13,7 +13,8 @@ Page({
       assists: 0,
       matches: 0
     },
-    abilityList: ABILITY_CONFIG,
+    abilityList: ABILITY_CONFIG,  // 雷达图展示的能力
+    allAbilityList: FORM_ABILITY_CONFIG, // 所有能力字段（用于计算总分）
     abilityTotal: 0,
     isAdmin: false,
     // 分页相关
@@ -55,10 +56,10 @@ Page({
         return;
       }
 
-      // 计算能力值总分
+      // 计算能力值总分（使用所有能力字段）
       let total = 0;
       let count = 0;
-      this.data.abilityList.forEach(item => {
+      this.data.allAbilityList.forEach(item => {
         if (player.ability && player.ability[item.key]) {
           total += player.ability[item.key];
           count++;
@@ -251,88 +252,93 @@ Page({
   // 绘制能力值雷达图
   drawRadarChart() {
     const ctx = wx.createCanvasContext('abilityRadar', this);
-    const width = 280;  // Canvas 画布宽度
-    const height = 300; // Canvas 画布高度
-    const centerX = width / 2;
-    const centerY = height / 2 - 10;
-    const radius = 85;  // 雷达图半径（留出边距）
+    // 获取 Canvas 实际宽度（rpx 转 px）
+    const query = this.createSelectorQuery();
+    query.select('#abilityRadar').boundingClientRect((rect) => {
+      if (!rect) return;
+      const width = rect.width;
+      const height = 240; // 减小高度
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const radius = Math.min(width, height) / 2 - 25; // 自适应半径
 
-    const ability = this.data.player.ability || {};
-    const values = this.data.abilityList.map(item => ability[item.key] || 0);
-    const maxValue = 100;
-    const angleStep = (Math.PI * 2) / this.data.abilityList.length;
+      const ability = this.data.player.ability || {};
+      const values = this.data.abilityList.map(item => ability[item.key] || 0);
+      const maxValue = 100;
+      const angleStep = (Math.PI * 2) / this.data.abilityList.length;
 
-    // 绘制背景网格
-    ctx.setStrokeStyle('#f0f0f0');
-    ctx.setLineWidth(1);
+      // 绘制背景网格
+      ctx.setStrokeStyle('#f0f0f0');
+      ctx.setLineWidth(1);
 
-    for (let i = 1; i <= 4; i++) {
-      const r = (radius / 4) * i;
+      for (let i = 1; i <= 4; i++) {
+        const r = (radius / 4) * i;
+        ctx.beginPath();
+        for (let j = 0; j < this.data.abilityList.length; j++) {
+          const angle = j * angleStep - Math.PI / 2;
+          const x = centerX + Math.cos(angle) * r;
+          const y = centerY + Math.sin(angle) * r;
+          if (j === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        }
+        ctx.closePath();
+        ctx.stroke();
+      }
+
+      // 绘制数据区域
+      ctx.setFillStyle('rgba(102, 126, 234, 0.3)');
+      ctx.setStrokeStyle('#667eea');
+      ctx.setLineWidth(2);
       ctx.beginPath();
-      for (let j = 0; j < this.data.abilityList.length; j++) {
-        const angle = j * angleStep - Math.PI / 2;
+
+      for (let i = 0; i < this.data.abilityList.length; i++) {
+        const value = values[i];
+        const r = (value / maxValue) * radius;
+        const angle = i * angleStep - Math.PI / 2;
         const x = centerX + Math.cos(angle) * r;
         const y = centerY + Math.sin(angle) * r;
-        if (j === 0) {
+        if (i === 0) {
           ctx.moveTo(x, y);
         } else {
           ctx.lineTo(x, y);
         }
       }
+
       ctx.closePath();
-      ctx.stroke();
-    }
-
-    // 绘制数据区域
-    ctx.setFillStyle('rgba(102, 126, 234, 0.3)');
-    ctx.setStrokeStyle('#667eea');
-    ctx.setLineWidth(2);
-    ctx.beginPath();
-
-    for (let i = 0; i < this.data.abilityList.length; i++) {
-      const value = values[i];
-      const r = (value / maxValue) * radius;
-      const angle = i * angleStep - Math.PI / 2;
-      const x = centerX + Math.cos(angle) * r;
-      const y = centerY + Math.sin(angle) * r;
-      if (i === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    }
-
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-
-    // 绘制顶点
-    values.forEach((value, i) => {
-      const r = (value / maxValue) * radius;
-      const angle = i * angleStep - Math.PI / 2;
-      const x = centerX + Math.cos(angle) * r;
-      const y = centerY + Math.sin(angle) * r;
-
-      ctx.beginPath();
-      ctx.arc(x, y, 4, 0, Math.PI * 2);
-      ctx.setFillStyle('#667eea');
       ctx.fill();
-    });
+      ctx.stroke();
 
-    // 绘制能力值标签
-    ctx.setFontSize(10);
-    ctx.setFillStyle('#666');
-    this.data.abilityList.forEach((item, i) => {
-      const angle = i * angleStep - Math.PI / 2;
-      const labelR = radius + 18; // 标签位置稍向外
-      const x = centerX + Math.cos(angle) * labelR;
-      const y = centerY + Math.sin(angle) * labelR;
-      ctx.setTextAlign('center');
-      ctx.setTextBaseline('middle');
-      ctx.fillText(item.label, x, y);
-    });
+      // 绘制顶点
+      values.forEach((value, i) => {
+        const r = (value / maxValue) * radius;
+        const angle = i * angleStep - Math.PI / 2;
+        const x = centerX + Math.cos(angle) * r;
+        const y = centerY + Math.sin(angle) * r;
 
-    ctx.draw();
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.setFillStyle('#667eea');
+        ctx.fill();
+      });
+
+      // 绘制能力值标签
+      ctx.setFontSize(10);
+      ctx.setFillStyle('#666');
+      this.data.abilityList.forEach((item, i) => {
+        const angle = i * angleStep - Math.PI / 2;
+        const labelR = radius + 18; // 标签位置稍向外
+        const x = centerX + Math.cos(angle) * labelR;
+        const y = centerY + Math.sin(angle) * labelR;
+        ctx.setTextAlign('center');
+        ctx.setTextBaseline('middle');
+        ctx.fillText(item.label, x, y);
+      });
+
+      ctx.draw();
+    }).exec();
   },
 
   // 查看全部比赛记录

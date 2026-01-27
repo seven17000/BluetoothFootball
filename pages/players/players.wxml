@@ -27,11 +27,20 @@
       </view>
       <view class="player-arrow">></view>
     </view>
+
+    <!-- 加载更多 -->
+    <view class="loading-tip" wx:if="{{hasMore}}">
+      <text wx:if="{{isLoadingMore}}">加载中...</text>
+      <text wx:else>上拉加载更多</text>
+    </view>
+    <view class="loading-tip" wx:if="{{!hasMore && players.length > 0}}">
+      <text>没有更多了</text>
+    </view>
   </view>
 
   <!-- 空状态 -->
   <view class="empty-state" wx:else>
-    <image src="/images/empty-player.png" mode="aspectFit"></image>
+    <text class="empty-icon">⚽</text>
     <text>暂无球员数据</text>
     <button class="btn btn-primary mt-20" bindtap="addPlayer" wx:if="{{isAdmin}}">添加球员</button>
   </view>

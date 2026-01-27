@@ -3,13 +3,20 @@ const app = getApp();
 const db = wx.cloud.database();
 const _ = db.command;
 
+const PAGE_SIZE = 10;
+
 Page({
   data: {
     players: [],
     keyword: '',
     position: '',
     isAdmin: false,
-    isLoading: true
+    isLoading: true,
+    // 分页相关
+    page: 1,
+    total: 0,
+    hasMore: true,
+    isLoadingMore: false
   },
 
   onLoad() {
@@ -19,12 +26,23 @@ Page({
   },
 
   onShow() {
-    this.loadPlayers();
+    this.loadPlayers(true);
   },
 
   // 加载球员列表
-  async loadPlayers() {
-    this.setData({ isLoading: true });
+  async loadPlayers(reset = false) {
+    if (reset) {
+      this.setData({ page: 1, hasMore: true, isLoading: true, players: [] });
+    }
+
+    if (!this.data.hasMore && !reset) return;
+
+    const isFirstLoad = reset && this.data.page === 1;
+    if (isFirstLoad) {
+      this.setData({ isLoading: true });
+    } else {
+      this.setData({ isLoadingMore: true });
+    }
 
     try {
       let query = db.collection('players');
@@ -46,16 +64,56 @@ Page({
         });
       }
 
-      const res = await query.orderBy('number', 'asc').get();
+      // 搜索或筛选时重置分页
+      if (this.data.keyword || this.data.position) {
+        this.setData({ page: 1, hasMore: true });
+      }
+
+      const page = this.data.page;
+      const skip = (page - 1) * PAGE_SIZE;
+
+      // 获取总数
+      const countRes = await db.collection('players').where(
+        query._queryCondition || {}
+      ).count();
+      const total = countRes.total;
+
+      // 获取当前页数据
+      const res = await query.orderBy('number', 'asc')
+        .skip(skip)
+        .limit(PAGE_SIZE)
+        .get();
+
+      const newPlayers = res.data;
+      const allPlayers = reset ? newPlayers : [...this.data.players, ...newPlayers];
+
       this.setData({
-        players: res.data,
-        isLoading: false
+        players: allPlayers,
+        total,
+        hasMore: allPlayers.length < total,
+        page: page + 1,
+        isLoading: false,
+        isLoadingMore: false
       });
     } catch (error) {
       console.error('加载球员失败', error);
-      this.setData({ isLoading: false });
+      this.setData({ isLoading: false, isLoadingMore: false });
       wx.showToast({ title: '加载失败', icon: 'none' });
     }
+  },
+
+  // 加载更多
+  onReachBottom() {
+    if (this.data.hasMore && !this.data.isLoadingMore) {
+      this.loadPlayers(false);
+    }
+  },
+
+  // 下拉刷新
+  onPullDownRefresh() {
+    this.loadPlayers(true).then(() => {
+      wx.stopPullDownRefresh();
+    });
   },
 
   // 搜索
@@ -65,7 +123,7 @@ Page({
     // 防抖处理
     if (this.searchTimer) clearTimeout(this.searchTimer);
     this.searchTimer = setTimeout(() => {
-      this.loadPlayers();
+      this.loadPlayers(true);
     }, 300);
   },
 
@@ -73,7 +131,7 @@ Page({
   filterByPosition(e) {
     const position = e.currentTarget.dataset.position;
     this.setData({ position });
-    this.loadPlayers();
+    this.loadPlayers(true);
   },
 
   // 跳转至球员详情

@@ -3,16 +3,14 @@ const app = getApp();
 const db = wx.cloud.database();
 const _ = db.command;
 
+const PAGE_SIZE = 10;
+
 Page({
   data: {
     matches: [],
-    // 年份固定为2025-2026
-    years: ['2025', '2026'],
-    months: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'],
-    startYear: '2025',
-    startMonth: '1',
-    endYear: '2026',
-    endMonth: '12',
+    page: 1,
+    hasMore: true,
+    isLoading: false,
     stats: {
       wins: 0,
       draws: 0,
@@ -25,33 +23,29 @@ Page({
 
   onShow() {
     this.setData({ isAdmin: app.isAdmin() });
-    this.loadMatches();
+    this.loadMatches(true);
   },
 
   // 加载比赛列表
-  async loadMatches() {
-    wx.showLoading({ title: '加载中...' });
+  async loadMatches(reset = false) {
+    if (this.data.isLoading) return;
+
+    this.setData({ isLoading: true });
 
     try {
-      // 计算开始日期（月初）
-      const startDate = new Date(
-        parseInt(this.data.startYear),
-        parseInt(this.data.startMonth) - 1,
-        1
-      ).toISOString();
+      const page = reset ? 1 : this.data.page;
+      const skip = (page - 1) * PAGE_SIZE;
 
-      // 计算结束日期（月末）
-      const endYear = parseInt(this.data.endYear);
-      const endMonth = parseInt(this.data.endMonth);
-      const lastDay = new Date(endYear, endMonth, 0).getDate();
-      const endDate = new Date(endYear, endMonth - 1, lastDay, 23, 59, 59).toISOString();
+      // 获取总数
+      const countRes = await db.collection('matches').count();
+      const total = countRes.total;
 
-      let query = db.collection('matches').where({
-        matchDate: _.gte(startDate).lte(endDate)
-      });
-
-      query = query.orderBy('matchDate', 'desc');
-      const res = await query.get();
+      // 获取当前页数据
+      const res = await db.collection('matches')
+        .orderBy('matchDate', 'desc')
+        .skip(skip)
+        .limit(PAGE_SIZE)
+        .get();
 
       const matches = res.data.map(m => {
         const dateStr = m.matchDate;
@@ -64,57 +58,84 @@ Page({
         };
       });
 
-      // 计算统计
-      const goals = matches.reduce((sum, m) => sum + (m.goals || 0), 0);
-      const conceded = matches.reduce((sum, m) => sum + (m.conceded || 0), 0);
+      // 先确认云数据库中实际有多少条记录
+      const verifyCount = await db.collection('matches').count();
+      const totalMatches = verifyCount.total;
+      console.log('云数据库中比赛总数:', totalMatches);
+
+      // 客户端 get() 最多只返回 20 条，需要分批查询获取所有数据
+      const batchSize = 20;
+      let allMatches = [];
+      for (let i = 0; i < totalMatches; i += batchSize) {
+        const batchRes = await db.collection('matches')
+          .skip(i)
+          .limit(batchSize)
+          .get();
+        allMatches.push(...batchRes.data);
+      }
+      console.log('实际获取比赛数量:', allMatches.length);
+
+      // 调试：打印所有 result 值及详情
+      console.log('=== 比赛数据诊断 ===');
+      console.log('总比赛数:', allMatches.length);
+
+      // 详细打印每场比赛的 result
+      allMatches.forEach((m, index) => {
+        const result = m.result;
+        const resultType = typeof result;
+        const resultLen = result ? result.length : 0;
+        const resultCode = result ? result.charCodeAt(0) : 0;
+        console.log(`[${index + 1}] id:${m._id} result:"${result}" type:${resultType} len:${resultLen} charCode:${resultCode}`);
+      });
+
+      // 统计各种结果
+      const wins = allMatches.filter(m => String(m.result).trim() === '胜').length;
+      const draws = allMatches.filter(m => String(m.result).trim() === '平').length;
+      const losses = allMatches.filter(m => String(m.result).trim() === '负').length;
+      const unknown = allMatches.filter(m => !['胜', '平', '负'].includes(String(m.result).trim())).length;
+      console.log('统计: 胜=' + wins + ', 平=' + draws + ', 负=' + losses + ', 未知=' + unknown);
+      console.log('验证: 总计=' + (wins + draws + losses + unknown));
+
+      const goals = allMatches.reduce((sum, m) => sum + (m.goals || 0), 0);
+      const conceded = allMatches.reduce((sum, m) => sum + (m.conceded || 0), 0);
       const stats = {
-        wins: matches.filter(m => m.result === '胜').length,
-        draws: matches.filter(m => m.result === '平').length,
-        losses: matches.filter(m => m.result === '负').length,
+        wins,
+        draws,
+        losses,
         goals,
         conceded,
         goalDiff: goals - conceded
       };
 
-      this.setData({ matches, stats });
+      const newMatches = reset ? matches : [...this.data.matches, ...matches];
+      const hasMore = newMatches.length < total;
+
+      this.setData({
+        matches: newMatches,
+        page: page + 1,
+        hasMore,
+        stats,
+        isLoading: false
+      });
     } catch (error) {
       console.error('加载比赛失败', error);
+      this.setData({ isLoading: false });
       wx.showToast({ title: '加载失败', icon: 'none' });
-    } finally {
-      wx.hideLoading();
     }
   },
 
-  // 开始年份选择
-  onStartYearChange(e) {
-    const index = e.detail.value;
-    const year = this.data.years[index];
-    this.setData({ startYear: year });
-    this.loadMatches();
+  // 加载更多
+  onReachBottom() {
+    if (this.data.hasMore) {
+      this.loadMatches();
+    }
   },
 
-  // 开始月份选择
-  onStartMonthChange(e) {
-    const index = e.detail.value;
-    const month = String(index + 1);
-    this.setData({ startMonth: month });
-    this.loadMatches();
-  },
-
-  // 结束年份选择
-  onEndYearChange(e) {
-    const index = e.detail.value;
-    const year = this.data.years[index];
-    this.setData({ endYear: year });
-    this.loadMatches();
-  },
-
-  // 结束月份选择
-  onEndMonthChange(e) {
-    const index = e.detail.value;
-    const month = String(index + 1);
-    this.setData({ endMonth: month });
-    this.loadMatches();
+  // 下拉刷新
+  onPullDownRefresh() {
+    this.loadMatches(true).then(() => {
+      wx.stopPullDownRefresh();
+    });
   },
 
   // 跳转至比赛详情

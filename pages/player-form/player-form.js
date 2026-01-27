@@ -1,6 +1,7 @@
 // pages/player-form/player-form.js
 const app = getApp();
 const db = wx.cloud.database();
+const { FORM_ABILITY_CONFIG } = require('../../utils/constants.js');
 
 Page({
   data: {
@@ -14,14 +15,7 @@ Page({
       joinDate: '',
       avatar: '',
       tags: [],
-      ability: {
-        power: 60,
-        stamina: 60,
-        shooting: 60,
-        dribbling: 60,
-        technique: 60,
-        iq: 60
-      }
+      ability: {}
     },
     positions: ['前锋', '中场', '后卫', '边后卫', '门将'],
     allTags: [
@@ -35,14 +29,7 @@ Page({
       { value: '助攻王', label: '助攻王' },
       { value: '精神领袖', label: '精神领袖' }
     ],
-    abilityConfig: [
-      { key: 'power', label: '力量', icon: '💪' },
-      { key: 'stamina', label: '体能', icon: '⚡' },
-      { key: 'shooting', label: '射门', icon: '⚽' },
-      { key: 'dribbling', label: '盘带', icon: '🏃' },
-      { key: 'technique', label: '技巧', icon: '🎯' },
-      { key: 'iq', label: '球商', icon: '🧠' }
-    ]
+    abilityConfig: FORM_ABILITY_CONFIG
   },
 
   onLoad(options) {
@@ -69,15 +56,11 @@ Page({
       const res = await db.collection('players').doc(this.data.playerId).get();
       const player = res.data;
 
-      // 初始化能力值对象
-      const ability = player.ability || {
-        power: 60,
-        stamina: 60,
-        shooting: 60,
-        dribbling: 60,
-        technique: 60,
-        iq: 60
-      };
+      // 初始化能力值对象（如果没有则创建默认值为60）
+      const ability = {};
+      this.data.abilityConfig.forEach(item => {
+        ability[item.key] = player.ability?.[item.key] || 60;
+      });
 
       this.setData({
         formData: {

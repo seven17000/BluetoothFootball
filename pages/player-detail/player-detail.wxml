@@ -40,7 +40,7 @@
       <canvas canvas-id="abilityRadar" id="abilityRadar" class="radar-canvas"></canvas>
     </view>
     <view class="ability-list">
-      <view class="ability-item" wx:for="{{abilityList}}" wx:key="key">
+      <view class="ability-item" wx:for="{{allAbilityList}}" wx:key="key">
         <view class="ability-header">
           <text class="ability-icon">{{item.icon}}</text>
           <text class="ability-name">{{item.label}}</text>
