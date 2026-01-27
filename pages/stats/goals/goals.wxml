@@ -3,17 +3,44 @@
   <view class="tab-bar">
     <view class="tab-item {{currentTab === 'goals' ? 'active' : ''}}" bindtap="switchTab" data-tab="goals">进球榜</view>
     <view class="tab-item {{currentTab === 'assists' ? 'active' : ''}}" bindtap="switchTab" data-tab="assists">助攻榜</view>
-    <view class="tab-item {{currentTab === 'attendance' ? 'active' : ''}}" bindtap="switchTab" data-tab="attendance">出勤榜</view>
   </view>
 
-  <!-- 赛季筛选 -->
-  <view class="season-filter">
-    <picker mode="selector" range="{{seasons}}" bindchange="onSeasonChange">
-      <view class="filter-picker">
-        <text>{{currentSeason || '选择赛季'}}</text>
-        <text class="arrow">▼</text>
+  <!-- 月份范围筛选 -->
+  <view class="date-filter">
+    <view class="filter-row">
+      <text class="filter-label">开始时间</text>
+      <view class="filter-pickers">
+        <picker mode="selector" range="{{years}}" bindchange="onStartYearChange">
+          <view class="picker">
+            <text>{{startYear}}年</text>
+            <text class="arrow">▼</text>
+          </view>
+        </picker>
+        <picker mode="selector" range="{{months}}" bindchange="onStartMonthChange">
+          <view class="picker">
+            <text>{{startMonth}}月</text>
+            <text class="arrow">▼</text>
+          </view>
+        </picker>
       </view>
-    </picker>
+    </view>
+    <view class="filter-row">
+      <text class="filter-label">结束时间</text>
+      <view class="filter-pickers">
+        <picker mode="selector" range="{{years}}" bindchange="onEndYearChange">
+          <view class="picker">
+            <text>{{endYear}}年</text>
+            <text class="arrow">▼</text>
+          </view>
+        </picker>
+        <picker mode="selector" range="{{months}}" bindchange="onEndMonthChange">
+          <view class="picker">
+            <text>{{endMonth}}月</text>
+            <text class="arrow">▼</text>
+          </view>
+        </picker>
+      </view>
+    </view>
   </view>
 
   <!-- 图表展示 -->
@@ -34,7 +61,7 @@
         </view>
         <view class="rank-value">
           <text class="value">{{item.value}}</text>
-          <text class="unit">{{currentTab === 'goals' ? '球' : (currentTab === 'assists' ? '助攻' : '场')}}</text>
+          <text class="unit">{{currentTab === 'goals' ? '球' : '助攻'}}</text>
         </view>
       </view>
     </view>
@@ -45,11 +72,11 @@
 
   <!-- 统计摘要 -->
   <view class="card summary-card">
-    <view class="summary-title">赛季统计</view>
+    <view class="summary-title">数据统计</view>
     <view class="summary-stats">
       <view class="summary-item">
         <text class="value">{{summary.total}}</text>
-        <text class="label">总{{currentTab === 'goals' ? '进球' : (currentTab === 'assists' ? '助攻' : '出勤')}}</text>
+        <text class="label">总{{currentTab === 'goals' ? '进球' : '助攻'}}</text>
       </view>
       <view class="summary-item">
         <text class="value">{{summary.avg}}</text>

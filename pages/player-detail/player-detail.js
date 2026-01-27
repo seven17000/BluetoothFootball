@@ -41,6 +41,15 @@ Page({
       const playerRes = await db.collection('players').doc(this.data.playerId).get();
       const player = playerRes.data;
 
+      if (!player) {
+        wx.hideLoading();
+        wx.showToast({ title: '球员不存在', icon: 'none' });
+        setTimeout(() => {
+          wx.navigateBack();
+        }, 1500);
+        return;
+      }
+
       // 计算能力值总分
       let total = 0;
       let count = 0;
@@ -73,35 +82,57 @@ Page({
     }
   },
 
-  // 加载比赛记录
+  // 加载比赛记录（适配 goalStats/assistStats: {playerId: count} 格式）
   async loadMatchRecords() {
     try {
-      // 获取该球员的所有比赛记录
-      const records = await db.collection('match_records')
-        .where({
-          playerId: this.data.playerId
-        })
-        .orderBy('matchDate', 'desc')
-        .get();
+      // 新格式：需要先获取所有比赛，再从 match_records 中筛选包含该球员的记录
+      const playerId = this.data.playerId;
 
-      if (records.data.length > 0) {
-        const matchIds = [...new Set(records.data.map(r => r.matchId))];
-        const matches = await db.collection('matches')
-          .where({
-            _id: _.in(matchIds)
-          })
-          .get();
+      // 获取该球员参加过的比赛（通过正则匹配 playerId）
+      // 由于云数据库不支持对象属性查询，我们获取所有 match_records 后在客户端过滤
+      const allRecordsRes = await db.collection('match_records').get();
+      const allRecords = allRecordsRes.data || [];
+
+      // 筛选包含该球员的记录
+      const playerRecords = allRecords.filter(r => {
+        if (r.goalStats && typeof r.goalStats === 'object' && r.goalStats.hasOwnProperty(playerId)) {
+          return true;
+        }
+        if (r.assistStats && typeof r.assistStats === 'object' && r.assistStats.hasOwnProperty(playerId)) {
+          return true;
+        }
+        return false;
+      });
+
+      if (playerRecords.length > 0) {
+        const matchIds = playerRecords.map(r => r.matchId);
+        // 分批获取比赛信息（_.in 最多支持20个）
+        const batchSize = 20;
+        const allMatches = [];
+        for (let i = 0; i < matchIds.length; i += batchSize) {
+          const batchIds = matchIds.slice(i, i + batchSize);
+          const matches = await db.collection('matches')
+            .where({
+              _id: _.in(batchIds)
+            })
+            .get();
+          allMatches.push(...matches.data);
+        }
 
         const matchMap = {};
-        matches.data.forEach(m => {
+        allMatches.forEach(m => {
           matchMap[m._id] = m;
         });
 
-        const matchRecords = records.data.map(r => {
+        const matchRecords = playerRecords.map(r => {
           const match = matchMap[r.matchId] || {};
           const date = new Date(match.matchDate);
+          const goals = r.goalStats?.[playerId] || 0;
+          const assists = r.assistStats?.[playerId] || 0;
           return {
-            ...r,
+            matchId: r.matchId,
+            goals,
+            assists,
             matchDate: `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`,
             opponent: match.opponent || '未知',
             result: match.result || '-',

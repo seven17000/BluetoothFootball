@@ -14,7 +14,8 @@
     "pages/stats/goals/goals",
     "pages/stats/assists/assists",
     "pages/stats/attendance/attendance",
-    "pages/profile/profile"
+    "pages/profile/profile",
+    "pages/admin/admin"
   ],
   "window": {
     "backgroundTextStyle": "light",
@@ -41,14 +42,8 @@
         "selectedIconPath": "images/team-active.png"
       },
       {
-        "pagePath": "pages/schedule/schedule",
-        "text": "日程",
-        "iconPath": "images/calendar.png",
-        "selectedIconPath": "images/calendar-active.png"
-      },
-      {
         "pagePath": "pages/stats/goals/goals",
-        "text": "统计",
+        "text": "数据",
         "iconPath": "images/chart.png",
         "selectedIconPath": "images/chart-active.png"
       },

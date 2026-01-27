@@ -55,17 +55,30 @@ Page({
     }
   },
 
-  // 加载球员表现记录
+  // 加载球员表现记录（适配 goalStats/assistStats: {playerId: count} 格式）
   async loadPlayerRecords() {
     try {
-      const records = await db.collection('match_records')
+      const recordsRes = await db.collection('match_records')
         .where({
           matchId: this.data.matchId
         })
         .get();
 
-      if (records.data.length > 0) {
-        const playerIds = [...new Set(records.data.map(r => r.playerId))];
+      const records = recordsRes.data || [];
+
+      if (records.length > 0) {
+        // 从 goalStats 和 assistStats 中提取所有球员ID
+        const playerIdSet = new Set();
+        records.forEach(r => {
+          if (r.goalStats && typeof r.goalStats === 'object') {
+            Object.keys(r.goalStats).forEach(id => playerIdSet.add(id));
+          }
+          if (r.assistStats && typeof r.assistStats === 'object') {
+            Object.keys(r.assistStats).forEach(id => playerIdSet.add(id));
+          }
+        });
+
+        const playerIds = Array.from(playerIdSet);
         const players = await db.collection('players')
           .where({
             _id: _.in(playerIds)
@@ -77,11 +90,38 @@ Page({
           playerMap[p._id] = p;
         });
 
-        const playerRecords = records.data.map(r => ({
-          ...r,
-          playerName: playerMap[r.playerId]?.name || '未知',
-          position: playerMap[r.playerId]?.position || ''
-        }));
+        // 构建球员记录（每条记录代表一个球员在一场比赛中的表现）
+        const playerRecords = [];
+        records.forEach(r => {
+          // 从 goalStats 获取进球数据
+          if (r.goalStats && typeof r.goalStats === 'object') {
+            Object.entries(r.goalStats).forEach(([playerId, goals]) => {
+              playerRecords.push({
+                playerId,
+                goals,
+                assists: r.assistStats?.[playerId] || 0,
+                playerName: playerMap[playerId]?.name || '未知',
+                position: playerMap[playerId]?.position || ''
+              });
+            });
+          }
+          // 从 assistStats 获取助攻数据（只出现在 assistStats 中的球员）
+          if (r.assistStats && typeof r.assistStats === 'object') {
+            Object.entries(r.assistStats).forEach(([playerId, assists]) => {
+              // 如果这个球员已经在 goalStats 中处理过了，跳过
+              const existing = playerRecords.find(pr => pr.playerId === playerId && pr.goals > 0);
+              if (!existing) {
+                playerRecords.push({
+                  playerId,
+                  goals: 0,
+                  assists,
+                  playerName: playerMap[playerId]?.name || '未知',
+                  position: playerMap[playerId]?.position || ''
+                });
+              }
+            });
+          }
+        });
 
         this.setData({ playerRecords });
       }
@@ -95,11 +135,10 @@ Page({
     const goalDetails = [];
     this.data.playerRecords.forEach(record => {
       if (record.goals > 0) {
-        const playerName = this.data.playerRecords.find(r => r.playerId === record.playerId)?.playerName || '未知';
         for (let i = 0; i < record.goals; i++) {
           goalDetails.push({
             time: (i + 1) * 15 + Math.floor(Math.random() * 15), // 模拟进球时间
-            scorer: playerName,
+            scorer: record.playerName,
             assist: record.assists > 0 ? '队友' : ''
           });
         }

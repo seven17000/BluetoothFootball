@@ -74,7 +74,7 @@ Page({
     const now = new Date();
     const matches = await db.collection('matches')
       .orderBy('matchDate', 'desc')
-      .limit(5)
+      .limit(3)
       .get();
 
     const recentMatches = matches.data.map(m => {
@@ -116,34 +116,124 @@ Page({
     this.setData({ upcomingSchedules });
   },
 
-  // 加载射手榜TOP5
+  // 加载射手榜TOP3（2025-2026年）
   async loadTopScorers() {
-    // 获取所有比赛记录
-    const recordsRes = await db.collection('match_records').get();
-    const records = recordsRes.data || [];
+    try {
+      // 使用2025-2026年的数据范围
+      const startDate = new Date(2025, 0, 1).toISOString();
+      const endDate = new Date(2026, 11, 31, 23, 59, 59).toISOString();
 
-    // 在客户端按球员名称分组计算进球数
-    const playerGoals = {};
-    records.forEach(r => {
-      if (r.playerName && r.goals) {
-        playerGoals[r.playerName] = (playerGoals[r.playerName] || 0) + r.goals;
+      // 获取该时间范围的比赛
+      const countRes = await db.collection('matches')
+        .where({
+          matchDate: _.gte(startDate).lte(endDate)
+        })
+        .count();
+      const totalMatches = countRes.total;
+      console.log('比赛总数:', totalMatches);
+
+      // 分批获取所有比赛
+      const batchSize = 20;
+      const allMatches = [];
+      for (let i = 0; i < totalMatches; i += batchSize) {
+        const matchesBatch = await db.collection('matches')
+          .where({
+            matchDate: _.gte(startDate).lte(endDate)
+          })
+          .skip(i)
+          .limit(batchSize)
+          .get();
+        allMatches.push(...matchesBatch.data);
       }
-    });
+      const matches = allMatches;
+      console.log('实际获取比赛数量:', matches.length);
 
-    // 转换为数组并排序
-    const sortedPlayers = Object.entries(playerGoals)
-      .map(([playerName, goals]) => ({ playerName, goals }))
-      .sort((a, b) => b.goals - a.goals)
-      .slice(0, 5);
+      if (matches.length === 0) {
+        console.log('没有比赛数据');
+        this.setData({ topScorers: [] });
+        return;
+      }
 
-    // 直接使用 playerName 显示
-    const topScorers = sortedPlayers.map(p => ({
-      ...p,
-      name: p.playerName,
-      position: ''
-    }));
+      const matchIds = matches.map(m => m._id);
+      console.log('比赛数量:', matchIds.length);
 
-    this.setData({ topScorers });
+      // 分批获取球员记录（_.in 最多支持20个）
+      const recordBatchSize = 20;
+      const allRecords = [];
+      let batchNum = 0;
+      for (let i = 0; i < matchIds.length; i += recordBatchSize) {
+        batchNum++;
+        const batchIds = matchIds.slice(i, i + recordBatchSize);
+        console.log(`批次${batchNum}: 查询 ${batchIds.length} 个比赛ID`);
+        const recordsRes = await db.collection('match_records')
+          .where({
+            matchId: _.in(batchIds)
+          })
+          .get();
+        console.log(`批次${batchNum}: 返回 ${recordsRes.data?.length || 0} 条记录`);
+        allRecords.push(...(recordsRes.data || []));
+      }
+      const records = allRecords;
+      console.log('总球员记录数量:', records.length);
+
+      if (records.length === 0) {
+        console.log('没有球员记录数据');
+        this.setData({ topScorers: [] });
+        return;
+      }
+
+      // 按球员ID分组计算进球数（适配 goalStats: {playerId: count} 格式）
+      const playerGoals = {};
+      records.forEach(r => {
+        if (r.goalStats && typeof r.goalStats === 'object') {
+          // goalStats 是 {playerId: count} 格式的对象
+          Object.entries(r.goalStats).forEach(([playerId, count]) => {
+            playerGoals[playerId] = (playerGoals[playerId] || 0) + count;
+          });
+        }
+      });
+
+      console.log('有进球的球员数量:', Object.keys(playerGoals).length);
+
+      // 获取球员信息
+      const playerIds = Object.keys(playerGoals);
+      if (playerIds.length === 0) {
+        this.setData({ topScorers: [] });
+        return;
+      }
+
+      const playersRes = await db.collection('players')
+        .where({
+          _id: _.in(playerIds)
+        })
+        .get();
+      const players = playersRes.data || [];
+
+      const playerMap = {};
+      players.forEach(p => {
+        playerMap[p._id] = p;
+      });
+
+      // 转换为数组并排序
+      const sortedPlayers = Object.entries(playerGoals)
+        .map(([playerId, goals]) => {
+          const player = playerMap[playerId] || {};
+          return {
+            playerId,
+            name: player.name || '未知',
+            position: player.position || '',
+            goals
+          };
+        })
+        .sort((a, b) => b.goals - a.goals)
+        .slice(0, 3);
+
+      console.log('射手榜数据:', sortedPlayers);
+      this.setData({ topScorers: sortedPlayers });
+    } catch (error) {
+      console.error('加载射手榜失败:', error);
+      this.setData({ topScorers: [] });
+    }
   },
 
   // 跳转至比赛详情
@@ -178,15 +268,15 @@ Page({
 
   // 跳转至比赛列表
   goToMatches() {
-    wx.switchTab({ url: '/pages/matches/matches' });
+    wx.navigateTo({ url: '/pages/matches/matches' });
   },
 
   // 跳转至日历
   goToSchedule() {
-    wx.switchTab({ url: '/pages/schedule/schedule' });
+    wx.navigateTo({ url: '/pages/schedule/schedule' });
   },
 
-  // 跳转至统计
+  // 跳转至数据统计（使用switchTab因为在tabBar中）
   goToStats() {
     wx.switchTab({ url: '/pages/stats/goals/goals' });
   },

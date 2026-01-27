@@ -6,8 +6,13 @@ const _ = db.command;
 Page({
   data: {
     currentTab: 'goals',
-    seasons: ['2024-2025', '2023-2024', '2022-2023', '2021-2022'],
-    currentSeason: '',
+    // 年份固定为2025-2026
+    years: ['2025', '2026'],
+    months: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'],
+    startYear: '2025',
+    startMonth: '1',
+    endYear: '2026',
+    endMonth: '12',
     rankList: [],
     chartTitle: '进球榜',
     summary: {
@@ -15,14 +20,6 @@ Page({
       avg: 0,
       topPlayer: '-'
     }
-  },
-
-  onLoad() {
-    const year = new Date().getFullYear();
-    const month = new Date().getMonth();
-    const season = month >= 8 ? `${year}-${year + 1}` : `${year - 1}-${year}`;
-    this.setData({ currentSeason: season });
-    this.loadStats();
   },
 
   onShow() {
@@ -36,10 +33,35 @@ Page({
     this.loadStats();
   },
 
-  // 赛季选择
-  onSeasonChange(e) {
+  // 开始年份选择
+  onStartYearChange(e) {
     const index = e.detail.value;
-    this.setData({ currentSeason: this.data.seasons[index] });
+    const year = this.data.years[index];
+    this.setData({ startYear: year });
+    this.loadStats();
+  },
+
+  // 开始月份选择
+  onStartMonthChange(e) {
+    const index = e.detail.value;
+    const month = String(index + 1);
+    this.setData({ startMonth: month });
+    this.loadStats();
+  },
+
+  // 结束年份选择
+  onEndYearChange(e) {
+    const index = e.detail.value;
+    const year = this.data.years[index];
+    this.setData({ endYear: year });
+    this.loadStats();
+  },
+
+  // 结束月份选择
+  onEndMonthChange(e) {
+    const index = e.detail.value;
+    const month = String(index + 1);
+    this.setData({ endMonth: month });
     this.loadStats();
   },
 
@@ -48,21 +70,42 @@ Page({
     wx.showLoading({ title: '加载中...' });
 
     try {
-      const { currentTab, currentSeason } = this.data;
+      const { currentTab, startYear, startMonth, endYear, endMonth } = this.data;
 
-      // 计算赛季日期范围
-      const [startYear, endYear] = currentSeason.split('-');
-      const startDate = new Date(parseInt(startYear), 8, 1);
-      const endDate = new Date(parseInt(endYear) + 1, 7, 31);
+      // 计算开始和结束日期
+      const startDate = new Date(
+        parseInt(startYear),
+        parseInt(startMonth) - 1,
+        1
+      ).toISOString();
 
-      // 获取该赛季的比赛
-      const matches = await db.collection('matches')
+      const endYearInt = parseInt(endYear);
+      const endMonthInt = parseInt(endMonth);
+      const lastDay = new Date(endYearInt, endMonthInt, 0).getDate();
+      const endDate = new Date(endYearInt, endMonthInt - 1, lastDay, 23, 59, 59).toISOString();
+
+      // 获取该时间范围的比赛
+      const countRes = await db.collection('matches')
         .where({
           matchDate: _.gte(startDate).lte(endDate)
         })
-        .get();
+        .count();
+      const totalMatches = countRes.total;
 
-      const matchIds = matches.data.map(m => m._id);
+      // 分批获取所有比赛
+      const batchSize = 20;
+      const allMatches = [];
+      for (let i = 0; i < totalMatches; i += batchSize) {
+        const matchesBatch = await db.collection('matches')
+          .where({
+            matchDate: _.gte(startDate).lte(endDate)
+          })
+          .skip(i)
+          .limit(batchSize)
+          .get();
+        allMatches.push(...matchesBatch.data);
+      }
+      const matchIds = allMatches.map(m => m._id);
 
       if (matchIds.length === 0) {
         this.setData({
@@ -73,60 +116,90 @@ Page({
         return;
       }
 
-      // 获取球员表现记录
-      let query = db.collection('match_records').where({
-        matchId: _.in(matchIds)
-      });
+      // 分批获取球员表现记录（_.in 最多支持20个）
+      const recordBatchSize = 20;
+      const allRecords = [];
+      for (let i = 0; i < matchIds.length; i += recordBatchSize) {
+        const batchIds = matchIds.slice(i, i + recordBatchSize);
+        const recordsRes = await db.collection('match_records')
+          .where({
+            matchId: _.in(batchIds)
+          })
+          .get();
+        allRecords.push(...(recordsRes.data || []));
+      }
+      const records = allRecords;
 
-      if (currentTab === 'goals') {
-        query = query.groupBy('playerId').sum('goals');
-      } else if (currentTab === 'assists') {
-        query = query.groupBy('playerId').sum('assists');
+      if (records.length === 0) {
+        this.setData({
+          rankList: [],
+          summary: { total: 0, avg: 0, topPlayer: '-' }
+        });
+        wx.hideLoading();
+        return;
       }
 
-      const records = await query.end();
+      // 按球员ID分组计算（适配 goalStats/assistStats: {playerId: count} 格式）
+      const playerStats = {};
+      records.forEach(r => {
+        // 处理进球统计
+        if (r.goalStats && typeof r.goalStats === 'object') {
+          Object.entries(r.goalStats).forEach(([playerId, count]) => {
+            if (!playerStats[playerId]) {
+              playerStats[playerId] = { goals: 0, assists: 0 };
+            }
+            playerStats[playerId].goals += count;
+          });
+        }
+        // 处理助攻统计
+        if (r.assistStats && typeof r.assistStats === 'object') {
+          Object.entries(r.assistStats).forEach(([playerId, count]) => {
+            if (!playerStats[playerId]) {
+              playerStats[playerId] = { goals: 0, assists: 0 };
+            }
+            playerStats[playerId].assists += count;
+          });
+        }
+      });
 
-      if (records && records.length > 0) {
-        const playerIds = records.map(r => r.playerId);
-        const players = await db.collection('players')
-          .where({ _id: _.in(playerIds) })
-          .get();
+      // 获取球员信息
+      const playerIds = Object.keys(playerStats);
+      const playersRes = await db.collection('players')
+        .where({ _id: _.in(playerIds) })
+        .get();
 
-        const playerMap = {};
-        players.data.forEach(p => {
-          playerMap[p._id] = p;
-        });
+      const playerMap = {};
+      playersRes.data.forEach(p => {
+        playerMap[p._id] = p;
+      });
 
-        let total = 0;
-        const rankList = records.map(r => {
-          const player = playerMap[r.playerId] || {};
-          let value = 0;
-          if (currentTab === 'goals') {
-            value = r.sum?.goals || 0;
-          } else if (currentTab === 'assists') {
-            value = r.sum?.assists || 0;
-          }
+      // 转换为数组并排序
+      let total = 0;
+      const rankList = Object.entries(playerStats)
+        .map(([playerId, stats]) => {
+          const player = playerMap[playerId] || {};
+          const value = currentTab === 'goals' ? stats.goals : stats.assists;
           total += value;
           return {
-            playerId: r.playerId,
+            playerId,
             name: player.name || '未知',
             position: player.position || '',
             value
           };
-        }).sort((a, b) => b.value - a.value);
+        })
+        .sort((a, b) => b.value - a.value);
 
-        const topPlayer = rankList.length > 0 ? rankList[0].name : '-';
-        const avg = rankList.length > 0 ? (total / rankList.length).toFixed(1) : 0;
+      const topPlayer = rankList.length > 0 ? rankList[0].name : '-';
+      const avg = rankList.length > 0 ? (total / rankList.length).toFixed(1) : 0;
 
-        this.setData({
-          rankList,
-          chartTitle: currentTab === 'goals' ? '进球榜' : (currentTab === 'assists' ? '助攻榜' : '出勤榜'),
-          summary: { total, avg, topPlayer }
-        });
+      this.setData({
+        rankList,
+        chartTitle: currentTab === 'goals' ? '进球榜' : '助攻榜',
+        summary: { total, avg, topPlayer }
+      });
 
-        // 绘制图表
-        this.drawChart();
-      }
+      // 绘制图表
+      this.drawChart();
     } catch (error) {
       console.error('加载统计数据失败', error);
     } finally {
@@ -153,29 +226,23 @@ Page({
     const startY = 40;
 
     ctx.setFontSize(12);
-
-    // 绘制标题
     ctx.setFillStyle('#333');
-    ctx.fillText(`${currentTab === 'goals' ? '进球' : (currentTab === 'assists' ? '助攻' : '出勤')}TOP10`, padding, 20);
+    ctx.fillText(`${currentTab === 'goals' ? '进球' : '助攻'}TOP10`, padding, 20);
 
     top10.forEach((item, index) => {
       const y = startY + index * (barHeight + barGap);
       const color = item.value > 0 ? '#1989fa' : '#ddd';
 
-      // 名字
       ctx.setFillStyle('#666');
       ctx.fillText(item.name.substring(0, 4), padding, y + barHeight / 2 + 4);
 
-      // 背景条
       ctx.setFillStyle('#f0f0f0');
       ctx.fillRect(padding + labelWidth, y, chartWidth - labelWidth - valueWidth, barHeight);
 
-      // 数据条
       const barWidth = (item.value / maxValue) * (chartWidth - labelWidth - valueWidth);
       ctx.setFillStyle(color);
       ctx.fillRect(padding + labelWidth, y, barWidth, barHeight);
 
-      // 数值
       ctx.setFillStyle('#333');
       ctx.fillText(item.value, padding + labelWidth + chartWidth - labelWidth - valueWidth + 10, y + barHeight / 2 + 4);
     });
