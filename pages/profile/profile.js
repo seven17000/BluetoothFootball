@@ -86,17 +86,12 @@ Page({
 
   // 跳转至个人信息编辑
   goToProfileEdit() {
-    wx.showToast({ title: '功能开发中', icon: 'none' });
+    wx.navigateTo({ url: '/pages/profile-edit/profile-edit' });
   },
 
   // 跳转至比赛管理
   goToMatches() {
-    wx.switchTab({ url: '/pages/matches/matches' });
-  },
-
-  // 跳转至出勤记录
-  goToAttendance() {
-    wx.navigateTo({ url: '/pages/attendance/attendance' });
+    wx.navigateTo({ url: '/pages/matches/matches' });
   },
 
   // 跳转至用户管理
@@ -106,15 +101,6 @@ Page({
       return;
     }
     wx.showToast({ title: '功能开发中', icon: 'none' });
-  },
-
-  // 跳转至数据管理
-  goToAdmin() {
-    if (!app.isAdmin()) {
-      wx.showToast({ title: '权限不足', icon: 'none' });
-      return;
-    }
-    wx.navigateTo({ url: '/pages/admin/admin' });
   },
 
   // 跳转至关于

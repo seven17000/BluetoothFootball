@@ -20,7 +20,7 @@
       <view class="player-number">{{item.number}}</view>
       <view class="player-info">
         <view class="player-name">{{item.name}}</view>
-        <view class="player-position">{{item.position}}</view>
+        <view class="player-position">{{item.positions.join(' / ')}}</view>
       </view>
       <view class="player-tags" wx:if="{{item.tags && item.tags.length > 0}}">
         <text class="tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>

@@ -16,7 +16,7 @@
     "pages/stats/assists/assists",
     "pages/stats/attendance/attendance",
     "pages/profile/profile",
-    "pages/admin/admin"
+    "pages/profile-edit/profile-edit"
   ],
   "window": {
     "backgroundTextStyle": "light",

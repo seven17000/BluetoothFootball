@@ -110,6 +110,30 @@ page {
   opacity: 0.8;
 }
 
+/* 个人信息卡片 */
+.info-grid {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.info-item {
+  width: 33.33%;
+  padding: 16rpx 0;
+  box-sizing: border-box;
+}
+
+.info-label {
+  display: block;
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 8rpx;
+}
+
+.info-value {
+  font-size: 28rpx;
+  color: #333;
+}
+
 /* 能力值卡片 */
 .ability-chart {
   width: 100%;

@@ -16,7 +16,13 @@ exports.main = async (event, context) => {
 
   try {
     // 查询用户是否已存在
-    let user = await db.collection('users').doc(openid).get();
+    let user;
+    try {
+      user = await db.collection('users').doc(openid).get();
+    } catch (e) {
+      // 用户不存在，doc() 会报错
+      user = { data: null };
+    }
 
     if (!user.data) {
       // 新用户，创建记录
@@ -24,13 +30,13 @@ exports.main = async (event, context) => {
       const userCount = await db.collection('users').count();
       const role = userCount.total === 0 ? 'admin' : 'user';
 
-      await db.collection('users').doc(openid).add({
+      await db.collection('users').doc(openid).set({
         data: {
-          _id: openid,
           openid,
           role,
           name: userInfo?.nickName || '',
           avatar: userInfo?.avatarUrl || '',
+          bio: '',            // 个人简介
           createTime: new Date(),
           lastLoginTime: new Date()
         }
@@ -43,6 +49,7 @@ exports.main = async (event, context) => {
           role,
           name: userInfo?.nickName || '',
           avatar: userInfo?.avatarUrl || '',
+          bio: '',
           isNewUser: true
         }
       };

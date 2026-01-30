@@ -15,12 +15,16 @@
       </view>
 
       <view class="form-group">
-        <text class="form-label">位置 *</text>
-        <picker mode="selector" range="{{positions}}" bindchange="onPositionChange">
-          <view class="form-picker">
-            {{formData.position || '请选择位置'}}
+        <text class="form-label">位置 *（可多选）</text>
+        <view class="position-tags">
+          <view class="position-tag {{formData.positions.includes(item) ? 'active' : ''}}"
+                wx:for="{{positions}}"
+                wx:key="*this"
+                bindtap="togglePosition"
+                data-position="{{item}}">
+            {{item}}
           </view>
-        </picker>
+        </view>
       </view>
 
       <view class="form-group">
@@ -33,6 +37,42 @@
         <picker mode="date" bindchange="onDateChange">
           <view class="form-picker">
             {{formData.joinDate || '请选择日期'}}
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">性别</text>
+        <picker bindchange="onGenderChange" value="{{genderIndex}}" range="{{genders}}">
+          <view class="form-picker">
+            {{formData.gender || '请选择'}}
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">年龄</text>
+        <picker mode="selector" range="{{ageRange}}" bindchange="onAgeChange">
+          <view class="form-picker">
+            {{formData.age ? formData.age + '岁' : '请选择'}}
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">身高 (cm)</text>
+        <picker mode="selector" range="{{heightRange}}" bindchange="onHeightChange">
+          <view class="form-picker">
+            {{formData.height || '请选择'}}
+          </view>
+        </picker>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">体重 (kg)</text>
+        <picker mode="selector" range="{{weightRange}}" bindchange="onWeightChange">
+          <view class="form-picker">
+            {{formData.weight || '请选择'}}
           </view>
         </picker>
       </view>

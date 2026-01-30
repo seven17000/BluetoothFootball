@@ -17,7 +17,23 @@ Page({
       notes: ''
     },
     resultText: '待定',
-    resultClass: ''
+    resultClass: '',
+    // 球员列表
+    players: [],
+    // 出勤球员
+    attendancePlayers: [],
+    // 进球记录 [{playerId, playerName, count}]
+    goalRecords: [],
+    // 助攻记录 [{playerId, playerName, count}]
+    assistRecords: [],
+    // 临时选择
+    selectedGoalPlayer: '',
+    selectedAssistPlayer: '',
+    selectedGoalPlayerName: '',
+    selectedAssistPlayerName: '',
+    // 统计
+    totalGoals: 0,
+    totalAssists: 0
   },
 
   onLoad(options) {
@@ -34,6 +50,20 @@ Page({
       const matchDate = `${today.getFullYear()}-${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
       this.setData({ 'formData.matchDate': matchDate });
       this.calculateResult();
+    }
+    this.loadPlayers();
+  },
+
+  // 加载球员列表
+  async loadPlayers() {
+    try {
+      const res = await db.collection('players')
+        .where({ isActive: true })
+        .orderBy('number', 'asc')
+        .get();
+      this.setData({ players: res.data });
+    } catch (error) {
+      console.error('加载球员失败', error);
     }
   },
 
@@ -56,9 +86,13 @@ Page({
           ...match,
           matchDate,
           matchTime
-        }
+        },
+        attendancePlayers: match.attendancePlayers || [],
+        goalRecords: match.goalRecords || [],
+        assistRecords: match.assistRecords || []
       });
 
+      this.updateTotals();
       this.calculateResult();
     } catch (error) {
       console.error('加载比赛数据失败', error);
@@ -122,6 +156,193 @@ Page({
     this.setData({ resultText, resultClass });
   },
 
+  // 出勤球员选择
+  onAttendanceChange(e) {
+    this.setData({
+      attendancePlayers: e.detail.value
+    });
+  },
+
+  // 全选出勤
+  selectAllAttendance() {
+    const allIds = this.data.players.map(p => p._id);
+    this.setData({ attendancePlayers: allIds });
+  },
+
+  // 清空出勤
+  clearAllAttendance() {
+    this.setData({ attendancePlayers: [] });
+  },
+
+  // 选择进球球员
+  onGoalPlayerChange(e) {
+    const index = e.detail.value;
+    const player = this.data.players[index];
+    if (player) {
+      this.setData({
+        selectedGoalPlayer: player._id,
+        selectedGoalPlayerName: player.name
+      });
+    }
+  },
+
+  // 添加进球记录
+  addGoalRecord() {
+    const playerId = this.data.selectedGoalPlayer;
+    if (!playerId) {
+      wx.showToast({ title: '请选择球员', icon: 'none' });
+      return;
+    }
+
+    const player = this.data.players.find(p => p._id === playerId);
+    const goalRecords = [...this.data.goalRecords];
+    const existingIndex = goalRecords.findIndex(r => r.playerId === playerId);
+
+    if (existingIndex > -1) {
+      goalRecords[existingIndex].count += 1;
+    } else {
+      goalRecords.push({
+        playerId,
+        playerName: player.name,
+        playerNumber: player.number,
+        count: 1
+      });
+    }
+
+    this.setData({
+      goalRecords,
+      selectedGoalPlayer: '',
+      selectedGoalPlayerName: ''
+    });
+    this.updateTotals();
+  },
+
+  // 减少进球
+  decreaseGoal(e) {
+    const playerId = e.currentTarget.dataset.playerid;
+    const goalRecords = [...this.data.goalRecords];
+    const index = goalRecords.findIndex(r => r.playerId === playerId);
+
+    if (index > -1) {
+      if (goalRecords[index].count > 1) {
+        goalRecords[index].count -= 1;
+      } else {
+        goalRecords.splice(index, 1);
+      }
+      this.setData({ goalRecords });
+      this.updateTotals();
+    }
+  },
+
+  // 增加进球
+  increaseGoal(e) {
+    const playerId = e.currentTarget.dataset.playerid;
+    const goalRecords = [...this.data.goalRecords];
+    const index = goalRecords.findIndex(r => r.playerId === playerId);
+
+    if (index > -1) {
+      goalRecords[index].count += 1;
+      this.setData({ goalRecords });
+      this.updateTotals();
+    }
+  },
+
+  // 删除进球记录
+  removeGoalRecord(e) {
+    const playerId = e.currentTarget.dataset.playerid;
+    const goalRecords = this.data.goalRecords.filter(r => r.playerId !== playerId);
+    this.setData({ goalRecords });
+    this.updateTotals();
+  },
+
+  // 选择助攻球员
+  onAssistPlayerChange(e) {
+    const index = e.detail.value;
+    const player = this.data.players[index];
+    if (player) {
+      this.setData({
+        selectedAssistPlayer: player._id,
+        selectedAssistPlayerName: player.name
+      });
+    }
+  },
+
+  // 添加助攻记录
+  addAssistRecord() {
+    const playerId = this.data.selectedAssistPlayer;
+    if (!playerId) {
+      wx.showToast({ title: '请选择球员', icon: 'none' });
+      return;
+    }
+
+    const player = this.data.players.find(p => p._id === playerId);
+    const assistRecords = [...this.data.assistRecords];
+    const existingIndex = assistRecords.findIndex(r => r.playerId === playerId);
+
+    if (existingIndex > -1) {
+      assistRecords[existingIndex].count += 1;
+    } else {
+      assistRecords.push({
+        playerId,
+        playerName: player.name,
+        playerNumber: player.number,
+        count: 1
+      });
+    }
+
+    this.setData({
+      assistRecords,
+      selectedAssistPlayer: '',
+      selectedAssistPlayerName: ''
+    });
+    this.updateTotals();
+  },
+
+  // 减少助攻
+  decreaseAssist(e) {
+    const playerId = e.currentTarget.dataset.playerid;
+    const assistRecords = [...this.data.assistRecords];
+    const index = assistRecords.findIndex(r => r.playerId === playerId);
+
+    if (index > -1) {
+      if (assistRecords[index].count > 1) {
+        assistRecords[index].count -= 1;
+      } else {
+        assistRecords.splice(index, 1);
+      }
+      this.setData({ assistRecords });
+      this.updateTotals();
+    }
+  },
+
+  // 增加助攻
+  increaseAssist(e) {
+    const playerId = e.currentTarget.dataset.playerid;
+    const assistRecords = [...this.data.assistRecords];
+    const index = assistRecords.findIndex(r => r.playerId === playerId);
+
+    if (index > -1) {
+      assistRecords[index].count += 1;
+      this.setData({ assistRecords });
+      this.updateTotals();
+    }
+  },
+
+  // 删除助攻记录
+  removeAssistRecord(e) {
+    const playerId = e.currentTarget.dataset.playerid;
+    const assistRecords = this.data.assistRecords.filter(r => r.playerId !== playerId);
+    this.setData({ assistRecords });
+    this.updateTotals();
+  },
+
+  // 更新总数统计
+  updateTotals() {
+    const totalGoals = this.data.goalRecords.reduce((sum, r) => sum + r.count, 0);
+    const totalAssists = this.data.assistRecords.reduce((sum, r) => sum + r.count, 0);
+    this.setData({ totalGoals, totalAssists });
+  },
+
   // 提交表单
   async submitForm() {
     const { opponent, matchDate, goals, conceded } = this.data.formData;
@@ -144,6 +365,12 @@ Page({
       return;
     }
 
+    // 验证出勤人数
+    if (this.data.attendancePlayers.length === 0) {
+      wx.showToast({ title: '请选择出勤球员', icon: 'none' });
+      return;
+    }
+
     wx.showLoading({ title: '保存中...' });
 
     try {
@@ -156,6 +383,9 @@ Page({
         conceded: parseInt(this.data.formData.conceded) || 0,
         result: this.data.resultText,
         matchDate: matchDateTime,
+        attendancePlayers: this.data.attendancePlayers,
+        goalRecords: this.data.goalRecords,
+        assistRecords: this.data.assistRecords,
         updateTime: new Date()
       };
 

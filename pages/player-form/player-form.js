@@ -10,14 +10,23 @@ Page({
     formData: {
       name: '',
       number: '',
-      position: '',
+      positions: [],
       phone: '',
       joinDate: '',
+      gender: '',
+      age: null,
+      height: null,
+      weight: null,
       avatar: '',
       tags: [],
       ability: {}
     },
     positions: ['前锋', '中场', '后卫', '边后卫', '门将'],
+    genders: ['男', '女'],
+    genderIndex: 0,
+    ageRange: Array.from({ length: 50 }, (_, i) => i + 16), // 16-65岁
+    heightRange: Array.from({ length: 60 }, (_, i) => i + 150), // 150-209cm
+    weightRange: Array.from({ length: 70 }, (_, i) => i + 40), // 40-109kg
     allTags: [
       { value: '队长', label: '队长' },
       { value: '副队长', label: '副队长' },
@@ -85,11 +94,20 @@ Page({
     });
   },
 
-  // 位置选择
-  onPositionChange(e) {
-    const index = e.detail.value;
+  // 位置切换（多选）
+  togglePosition(e) {
+    const position = e.currentTarget.dataset.position;
+    const positions = [...this.data.formData.positions];
+    const index = positions.indexOf(position);
+
+    if (index > -1) {
+      positions.splice(index, 1);
+    } else {
+      positions.push(position);
+    }
+
     this.setData({
-      'formData.position': this.data.positions[index]
+      'formData.positions': positions
     });
   },
 
@@ -98,6 +116,33 @@ Page({
     this.setData({
       'formData.joinDate': e.detail.value
     });
+  },
+
+  // 性别选择
+  onGenderChange(e) {
+    const gender = this.data.genders[e.detail.value];
+    this.setData({
+      'formData.gender': gender,
+      genderIndex: e.detail.value
+    });
+  },
+
+  // 年龄选择
+  onAgeChange(e) {
+    const age = this.data.ageRange[e.detail.value];
+    this.setData({ 'formData.age': age });
+  },
+
+  // 身高选择
+  onHeightChange(e) {
+    const height = this.data.heightRange[e.detail.value];
+    this.setData({ 'formData.height': height });
+  },
+
+  // 体重选择
+  onWeightChange(e) {
+    const weight = this.data.weightRange[e.detail.value];
+    this.setData({ 'formData.weight': weight });
   },
 
   // 选择头像
@@ -140,7 +185,7 @@ Page({
 
   // 提交表单
   async submitForm() {
-    const { name, number, position } = this.data.formData;
+    const { name, number, positions } = this.data.formData;
 
     // 验证必填项
     if (!name.trim()) {
@@ -151,7 +196,7 @@ Page({
       wx.showToast({ title: '请输入球衣号码', icon: 'none' });
       return;
     }
-    if (!position) {
+    if (!positions || positions.length === 0) {
       wx.showToast({ title: '请选择位置', icon: 'none' });
       return;
     }

@@ -13,7 +13,8 @@
       </view>
     </view>
     <view class="login-prompt" wx:else>
-      <text class="prompt-text">登录后可以查看和管理球队数据</text>
+      <text class="prompt-text">登录后可查看球队数据</text>
+      <text class="admin-tip">管理员登录后可录入和修改球员、比赛数据</text>
       <button class="btn btn-primary" bindtap="login">微信一键登录</button>
     </view>
   </view>
@@ -28,18 +29,10 @@
       <text class="menu-arrow">></text>
     </view>
 
-    <view class="menu-item" bindtap="goToMatches">
+    <view class="menu-item" bindtap="goToMatches" wx:if="{{isAdmin}}">
       <view class="menu-left">
         <text class="menu-icon">⚽</text>
         <text class="menu-text">比赛管理</text>
-      </view>
-      <text class="menu-arrow">></text>
-    </view>
-
-    <view class="menu-item" bindtap="goToAttendance">
-      <view class="menu-left">
-        <text class="menu-icon">📋</text>
-        <text class="menu-text">出勤记录</text>
       </view>
       <text class="menu-arrow">></text>
     </view>
@@ -48,14 +41,6 @@
       <view class="menu-left">
         <text class="menu-icon">👥</text>
         <text class="menu-text">用户管理</text>
-      </view>
-      <text class="menu-arrow">></text>
-    </view>
-
-    <view class="menu-item" wx:if="{{isAdmin}}" bindtap="goToAdmin">
-      <view class="menu-left">
-        <text class="menu-icon">⚙️</text>
-        <text class="menu-text">数据管理</text>
       </view>
       <text class="menu-arrow">></text>
     </view>

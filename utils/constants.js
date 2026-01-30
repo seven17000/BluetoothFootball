@@ -62,7 +62,9 @@ const FORM_ABILITY_CONFIG = [
   { key: 'technique', label: '基本功', icon: '🎯' },
   { key: 'duel', label: '对抗', icon: '🤼' },
   { key: 'explosion', label: '爆发', icon: '💥' },
-  { key: 'spirit', label: '精神', icon: '⭐' }
+  { key: 'spirit', label: '精神', icon: '⭐' },
+  { key: 'skill', label: '技巧', icon: '🎨' },
+  { key: 'tactical', label: '球商', icon: '📋' }
 ];
 
 // 活动类型

@@ -1,5 +1,7 @@
+<wxs src="./match-form.wxs" module="utils" />
 <view class="container">
   <form bindsubmit="submitForm">
+    <!-- 比赛信息 -->
     <view class="card">
       <view class="card-title">比赛信息</view>
 
@@ -63,6 +65,101 @@
       <view class="form-group">
         <text class="form-label">备注</text>
         <textarea class="form-textarea" name="notes" value="{{formData.notes}}" placeholder="请输入备注信息" bindinput="onInput" data-field="notes"></textarea>
+      </view>
+    </view>
+
+    <!-- 出勤球员 -->
+    <view class="card">
+      <view class="card-title">
+        <text>出勤球员 *</text>
+        <text class="attendance-count">已选 {{attendancePlayers.length}} 人</text>
+      </view>
+      <view class="quick-actions">
+        <text class="quick-btn" bindtap="selectAllAttendance">全选</text>
+        <text class="quick-btn" bindtap="clearAllAttendance">清空</text>
+      </view>
+      <checkbox-group class="player-checkbox-group" bindchange="onAttendanceChange">
+        <view class="player-grid">
+          <label class="player-checkbox {{utils.includes(attendancePlayers, item._id) ? 'checked' : ''}}" wx:for="{{players}}" wx:key="_id">
+            <checkbox value="{{item._id}}" checked="{{utils.includes(attendancePlayers, item._id)}}"/>
+            <text class="player-number">{{item.number}}</text>
+            <text class="player-name">{{item.name}}</text>
+          </label>
+        </view>
+      </checkbox-group>
+    </view>
+
+    <!-- 进球记录 -->
+    <view class="card">
+      <view class="card-title">
+        <text>进球记录</text>
+        <text class="stat-total">共 {{totalGoals}} 球</text>
+      </view>
+
+      <!-- 添加进球 -->
+      <view class="add-record-row">
+        <picker class="player-picker" mode="selector" range="{{players}}" range-key="name" bindchange="onGoalPlayerChange">
+          <view class="picker-content">
+            {{selectedGoalPlayerName || '选择球员'}}
+          </view>
+        </picker>
+        <view class="add-btn" bindtap="addGoalRecord">+ 添加</view>
+      </view>
+
+      <!-- 进球列表 -->
+      <view class="record-list" wx:if="{{goalRecords.length}}">
+        <view class="record-item" wx:for="{{goalRecords}}" wx:key="playerId">
+          <view class="record-player">
+            <text class="record-number">{{item.playerNumber}}号</text>
+            <text class="record-name">{{item.playerName}}</text>
+          </view>
+          <view class="record-count">
+            <view class="count-btn" bindtap="decreaseGoal" data-playerid="{{item.playerId}}">-</view>
+            <text class="count-num">{{item.count}}</text>
+            <view class="count-btn" bindtap="increaseGoal" data-playerid="{{item.playerId}}">+</view>
+          </view>
+          <view class="remove-btn" bindtap="removeGoalRecord" data-playerid="{{item.playerId}}">删除</view>
+        </view>
+      </view>
+      <view class="empty-record" wx:else>
+        <text>暂无进球记录</text>
+      </view>
+    </view>
+
+    <!-- 助攻记录 -->
+    <view class="card">
+      <view class="card-title">
+        <text>助攻记录</text>
+        <text class="stat-total">共 {{totalAssists}} 助攻</text>
+      </view>
+
+      <!-- 添加助攻 -->
+      <view class="add-record-row">
+        <picker class="player-picker" mode="selector" range="{{players}}" range-key="name" bindchange="onAssistPlayerChange">
+          <view class="picker-content">
+            {{selectedAssistPlayerName || '选择球员'}}
+          </view>
+        </picker>
+        <view class="add-btn" bindtap="addAssistRecord">+ 添加</view>
+      </view>
+
+      <!-- 助攻列表 -->
+      <view class="record-list" wx:if="{{assistRecords.length}}">
+        <view class="record-item" wx:for="{{assistRecords}}" wx:key="playerId">
+          <view class="record-player">
+            <text class="record-number">{{item.playerNumber}}号</text>
+            <text class="record-name">{{item.playerName}}</text>
+          </view>
+          <view class="record-count">
+            <view class="count-btn" bindtap="decreaseAssist" data-playerid="{{item.playerId}}">-</view>
+            <text class="count-num">{{item.count}}</text>
+            <view class="count-btn" bindtap="increaseAssist" data-playerid="{{item.playerId}}">+</view>
+          </view>
+          <view class="remove-btn" bindtap="removeAssistRecord" data-playerid="{{item.playerId}}">删除</view>
+        </view>
+      </view>
+      <view class="empty-record" wx:else>
+        <text>暂无助攻记录</text>
       </view>
     </view>
 
