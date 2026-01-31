@@ -1,14 +1,43 @@
 <view class="container">
-  <!-- 统计概览 -->
-  <view class="stats-bar">
-    <view class="stat-item">
-      <text class="stat-value">{{teamDays}}</text>
-      <text class="stat-label">球队成立天数</text>
+  <!-- 球队信息概览 -->
+  <view class="card">
+    <view class="stats-bar">
+      <view class="stat-item">
+        <text class="stat-value">{{teamDays}}</text>
+        <text class="stat-label">球队成立天数</text>
+      </view>
+      <view class="stat-divider"></view>
+      <image class="team-logo" src="/images/team-logo.png" mode="aspectFit"></image>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-value">{{playerCount}}</text>
+        <text class="stat-label">球员数量</text>
+      </view>
     </view>
-    <view class="stat-divider"></view>
-    <view class="stat-item">
-      <text class="stat-value">{{playerCount}}</text>
-      <text class="stat-label">球员数量</text>
+    <view class="card-header" style="margin-top: 20rpx; justify-content: center;">
+      <text class="title">赛季最新数据</text>
+    </view>
+    <view class="season-stats">
+      <view class="season-stat-item">
+        <text class="season-stat-value">{{seasonStats.goals}}</text>
+        <text class="season-stat-label">进球</text>
+      </view>
+      <view class="season-stat-item">
+        <text class="season-stat-value">{{seasonStats.conceded}}</text>
+        <text class="season-stat-label">丢球</text>
+      </view>
+      <view class="season-stat-item win">
+        <text class="season-stat-value">{{seasonStats.wins}}</text>
+        <text class="season-stat-label">胜</text>
+      </view>
+      <view class="season-stat-item draw">
+        <text class="season-stat-value">{{seasonStats.draws}}</text>
+        <text class="season-stat-label">平</text>
+      </view>
+      <view class="season-stat-item loss">
+        <text class="season-stat-value">{{seasonStats.losses}}</text>
+        <text class="season-stat-label">负</text>
+      </view>
     </view>
   </view>
 
@@ -25,6 +54,35 @@
     </view>
   </view>
 
+  <!-- 赛程信息 -->
+  <view class="card">
+    <view class="card-header">
+      <text class="title">赛程信息</text>
+      <view class="more" bindtap="goToSchedule">查看更多 ></view>
+    </view>
+    <view class="schedule-list" wx:if="{{upcomingSchedules.length > 0}}">
+      <view class="schedule-item" wx:for="{{upcomingSchedules}}" wx:key="_id" bindtap="goToScheduleDetail" data-id="{{item._id}}">
+        <view class="schedule-row-1">
+          <view class="schedule-team">蓝牙</view>
+          <view class="schedule-time-capsule">{{item.time}}</view>
+          <view class="schedule-opponent">{{item.opponent}}</view>
+        </view>
+        <view class="schedule-row-2">
+          <view class="schedule-jersey-left" wx:if="{{item.jerseyColor}}">球衣：{{item.jerseyColor}}</view>
+          <view class="schedule-datetime">
+            <text>{{item.month}}月{{item.day}}日</text>
+            <text wx:if="{{item.location}}">{{item.location}}</text>
+          </view>
+          <view class="schedule-jersey-right" wx:if="{{item.opponentJersey}}">球衣：{{item.opponentJersey}}</view>
+        </view>
+      </view>
+    </view>
+    <view class="empty-state" wx:else>
+      <text>暂无赛程信息</text>
+      <button class="btn btn-primary mt-20" bindtap="addSchedule" wx:if="{{isAdmin}}">添加赛程</button>
+    </view>
+  </view>
+
   <!-- 最近比赛 -->
   <view class="card">
     <view class="card-header">
@@ -33,22 +91,19 @@
     </view>
     <view class="match-list" wx:if="{{recentMatches.length > 0}}">
       <view class="match-item" wx:for="{{recentMatches}}" wx:key="_id" bindtap="goToMatchDetail" data-id="{{item._id}}">
-        <view class="match-date">
-          <text class="date-day">{{item.day}}</text>
-          <text class="date-month">{{item.month}}月</text>
+        <view class="match-row-1">
+          <view class="match-team">蓝牙</view>
+          <view class="match-result-capsule {{item.resultClass}}">{{item.goals}}-{{item.conceded}} {{item.result}}</view>
+          <view class="match-opponent">{{item.opponent}}</view>
         </view>
-        <view class="match-info">
-          <view class="match-opponent">
-            <text class="vs">VS</text>
-            <text>{{item.opponent}}</text>
+        <view class="match-row-2">
+          <view class="match-jersey-left" wx:if="{{item.jerseyColor}}">球衣：{{item.jerseyColor}}</view>
+          <view class="match-datetime">
+            <text>{{item.month}}月{{item.day}}日</text>
+            <text>{{item.isHome ? '主场' : '客场'}}</text>
+            <text wx:if="{{item.location}}">{{item.location}}</text>
           </view>
-          <view class="match-result">
-            <text class="score">{{item.goals}}-{{item.conceded}}</text>
-            <text class="result-tag {{item.resultClass}}">{{item.result}}</text>
-          </view>
-        </view>
-        <view class="match-location">
-          <text>{{item.isHome ? '主场' : '客场'}}</text>
+          <view class="match-jersey-right" wx:if="{{item.opponentJersey}}">球衣：{{item.opponentJersey}}</view>
         </view>
       </view>
     </view>
@@ -58,70 +113,46 @@
     </view>
   </view>
 
-  <!-- 射手榜TOP3 -->
-  <view class="card" wx:if="{{topScorers.length > 0}}">
-    <view class="card-header">
-      <text class="title">射手榜 TOP3</text>
-      <view class="more" bindtap="goToStats">查看更多 ></view>
-    </view>
-    <view class="top-scorer-list">
-      <view class="scorer-item" wx:for="{{topScorers}}" wx:key="index" wx:if="{{index < 3}}">
-        <view class="rank {{index < 3 ? 'rank-' + (index + 1) : ''}}">{{index + 1}}</view>
-        <view class="player-info">
-          <text class="player-name">{{item.name}}</text>
-          <text class="player-team">{{item.position}}</text>
-        </view>
-        <view class="goal-count">
-          <text class="goals">{{item.goals}}</text>
-          <text class="goals-label">球</text>
+  <!-- 射手榜和助攻榜 -->
+  <view class="stats-row" wx:if="{{topScorers.length > 0 || topAssists.length > 0}}">
+    <!-- 射手榜TOP3 -->
+    <view class="card stats-card" wx:if="{{topScorers.length > 0}}">
+      <view class="card-header">
+        <text class="title">射手榜 TOP3</text>
+        <view class="more" bindtap="goToStats">查看 ></view>
+      </view>
+      <view class="top-scorer-list">
+        <view class="scorer-item" wx:for="{{topScorers}}" wx:key="index" wx:if="{{index < 3}}">
+          <view class="rank {{index < 3 ? 'rank-' + (index + 1) : ''}}">{{index + 1}}</view>
+          <view class="player-info">
+            <text class="player-name">{{item.name}}</text>
+          </view>
+          <view class="goal-count">
+            <text class="goals">{{item.goals}}</text>
+            <text class="goals-label">球</text>
+          </view>
         </view>
       </view>
     </view>
-  </view>
 
-  <!-- 助攻榜TOP3 -->
-  <view class="card" wx:if="{{topAssists.length > 0}}">
-    <view class="card-header">
-      <text class="title">助攻榜 TOP3</text>
-      <view class="more" bindtap="goToStats">查看更多 ></view>
-    </view>
-    <view class="top-scorer-list">
-      <view class="scorer-item" wx:for="{{topAssists}}" wx:key="index" wx:if="{{index < 3}}">
-        <view class="rank {{index < 3 ? 'rank-' + (index + 1) : ''}}">{{index + 1}}</view>
-        <view class="player-info">
-          <text class="player-name">{{item.name}}</text>
-          <text class="player-team">{{item.position}}</text>
-        </view>
-        <view class="goal-count">
-          <text class="goals">{{item.assists}}</text>
-          <text class="goals-label">助攻</text>
+    <!-- 助攻榜TOP3 -->
+    <view class="card stats-card" wx:if="{{topAssists.length > 0}}">
+      <view class="card-header">
+        <text class="title">助攻榜 TOP3</text>
+        <view class="more" bindtap="goToAssists">查看 ></view>
+      </view>
+      <view class="top-scorer-list">
+        <view class="scorer-item" wx:for="{{topAssists}}" wx:key="index" wx:if="{{index < 3}}">
+          <view class="rank {{index < 3 ? 'rank-' + (index + 1) : ''}}">{{index + 1}}</view>
+          <view class="player-info">
+            <text class="player-name">{{item.name}}</text>
+          </view>
+          <view class="goal-count">
+            <text class="goals">{{item.assists}}</text>
+            <text class="goals-label">助攻</text>
+          </view>
         </view>
       </view>
-    </view>
-  </view>
-
-  <!-- 即将到来的赛程 -->
-  <view class="card">
-    <view class="card-header">
-      <text class="title">即将到来的赛程</text>
-      <view class="more" bindtap="goToSchedule">查看日历 ></view>
-    </view>
-    <view class="schedule-list" wx:if="{{upcomingSchedules.length > 0}}">
-      <view class="schedule-item" wx:for="{{upcomingSchedules}}" wx:key="_id" bindtap="goToScheduleDetail" data-id="{{item._id}}">
-        <view class="schedule-date">
-          <text class="s-day">{{item.day}}</text>
-          <text class="s-month">{{item.month}}月</text>
-        </view>
-        <view class="schedule-info">
-          <text class="schedule-title">{{item.title}}</text>
-          <text class="schedule-time">{{item.time}}</text>
-        </view>
-        <view class="schedule-type tag {{item.typeClass}}">{{item.type}}</view>
-      </view>
-    </view>
-    <view class="empty-state" wx:else>
-      <text>暂无赛程安排</text>
-      <button class="btn btn-primary mt-20" bindtap="addSchedule" wx:if="{{isAdmin}}">添加赛程</button>
     </view>
   </view>
 </view>
