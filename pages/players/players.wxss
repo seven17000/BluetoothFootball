@@ -61,21 +61,47 @@ page {
   border-bottom: 1rpx solid #f0f0f0;
 }
 
+/* 头像 */
+.player-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  margin-right: 16rpx;
+}
+
+.player-avatar .avatar-img {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+}
+
+.player-avatar .avatar-text {
+  width: 80rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+  text-align: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 28rpx;
+  font-weight: bold;
+}
+
 .player-item:last-child {
   border-bottom: none;
 }
 
 .player-number {
-  width: 60rpx;
-  height: 60rpx;
-  line-height: 60rpx;
-  text-align: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
-  border-radius: 50%;
-  font-size: 24rpx;
+  font-size: 28rpx;
+  color: #1989fa;
   font-weight: bold;
   margin-right: 20rpx;
+}
+
+.player-number-inline {
+  font-size: 24rpx;
+  color: #1989fa;
+  font-weight: bold;
+  margin-left: 8rpx;
 }
 
 .player-info {
@@ -87,6 +113,23 @@ page {
   font-weight: bold;
   color: #333;
   margin-bottom: 6rpx;
+  display: flex;
+  align-items: center;
+}
+
+.name-text {
+  display: inline-block;
+  width: 140rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-number-inline {
+  font-size: 24rpx;
+  color: #1989fa;
+  font-weight: bold;
+  margin-left: 8rpx;
 }
 
 .player-position {
@@ -145,4 +188,12 @@ page {
   border-radius: 50%;
   font-size: 60rpx;
   box-shadow: 0 8rpx 20rpx rgba(102, 126, 234, 0.4);
+}
+
+/* 加载提示 */
+.loading-tip {
+  text-align: center;
+  padding: 30rpx 0 120rpx;
+  color: #999;
+  font-size: 24rpx;
 }

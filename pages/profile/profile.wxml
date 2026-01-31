@@ -2,7 +2,8 @@
   <!-- 用户信息卡片 -->
   <view class="card user-card">
     <view class="user-info" wx:if="{{isLoggedIn}}">
-      <view class="avatar">
+      <image wx:if="{{userInfo.avatar}}" src="{{userInfo.avatar}}" mode="aspectFill" class="avatar-img"></image>
+      <view wx:else class="avatar">
         <text>{{userInfo.name || userInfo.nickName || '用户'}}</text>
       </view>
       <view class="info">

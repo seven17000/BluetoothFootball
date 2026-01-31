@@ -17,9 +17,15 @@
   <!-- 球员列表 -->
   <view class="player-list" wx:if="{{players.length > 0}}">
     <view class="player-item" wx:for="{{players}}" wx:key="_id" bindtap="goToDetail" data-id="{{item._id}}">
-      <view class="player-number">{{item.number}}</view>
+      <view class="player-avatar">
+        <image wx:if="{{item.avatar}}" src="{{item.avatar}}" mode="aspectFill" class="avatar-img"></image>
+        <view wx:else class="avatar-text">{{item.number}}</view>
+      </view>
       <view class="player-info">
-        <view class="player-name">{{item.name}}</view>
+        <view class="player-name">
+          <text class="name-text">{{item.name}}</text>
+          <text class="player-number-inline">{{item.number}}</text>
+        </view>
         <view class="player-position">{{item.positions.join(' / ')}}</view>
       </view>
       <view class="player-tags" wx:if="{{item.tags && item.tags.length > 0}}">

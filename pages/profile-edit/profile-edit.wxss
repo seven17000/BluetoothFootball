@@ -146,11 +146,25 @@ page {
 /* 按钮容器 */
 .btn-container {
   margin-top: 40rpx;
+  padding: 0 20rpx;
 }
 
-.btn-block {
-  width: 100%;
+button.btn-block {
+  width: 80%;
   height: 88rpx;
   line-height: 88rpx;
   font-size: 32rpx;
+  margin: 0 auto;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  background-color: #1989fa;
+  color: #fff;
+  border-radius: 8rpx;
+  border: none;
+  padding: 0;
+}
+
+button.btn-block::after {
+  display: none;
 }

@@ -17,9 +17,10 @@ Page({
     allAbilityList: FORM_ABILITY_CONFIG, // 所有能力字段（用于计算总分）
     abilityTotal: 0,
     isAdmin: false,
+    selectedSeason: '', // 当前选中赛季
     // 分页相关
     page: 1,
-    pageSize: 10,
+    pageSize: 5,
     hasMore: true,
     loading: false
   },
@@ -76,7 +77,8 @@ Page({
         matchRecords: []
       });
 
-      // 加载比赛记录
+      // 获取当前赛季并加载比赛记录
+      await this.loadCurrentSeason();
       await this.loadMatchRecords();
 
       // 绘制雷达图
@@ -89,6 +91,25 @@ Page({
     }
   },
 
+  // 获取当前赛季
+  async loadCurrentSeason() {
+    try {
+      const res = await db.collection('matches')
+        .orderBy('matchDate', 'desc')
+        .limit(1)
+        .get();
+
+      let latestSeason = '';
+      if (res.data.length > 0 && res.data[0].season) {
+        latestSeason = res.data[0].season;
+      }
+
+      this.setData({ selectedSeason: latestSeason });
+    } catch (error) {
+      console.error('获取赛季失败', error);
+    }
+  },
+
   // 加载比赛记录（适配 goalStats/assistStats: {playerId: count} 格式，支持分页）
   async loadMatchRecords(isLoadMore = false) {
     if (this.data.loading) return;
@@ -97,8 +118,15 @@ Page({
 
     try {
       const playerId = this.data.playerId;
+      const selectedSeason = this.data.selectedSeason;
 
-      // 先获取 match_records 总数
+      // 构建查询条件：只查询当前赛季的比赛
+      let matchQueryCondition = {};
+      if (selectedSeason) {
+        matchQueryCondition.season = selectedSeason;
+      }
+
+      // 先获取当前赛季的 match_records 总数
       const countRes = await db.collection('match_records').count();
       const totalRecords = countRes.total;
 
@@ -134,7 +162,7 @@ Page({
         }
       }
 
-      // 获取所有比赛信息用于排序
+      // 获取所有比赛信息用于排序和赛季过滤
       const allMatchIds = uniqueRecords.map(r => r.matchId);
       const matchBatchSize = 20;
       const allMatches = [];
@@ -146,13 +174,20 @@ Page({
         allMatches.push(...matches.data);
       }
 
+      // 按赛季过滤
+      const filteredMatches = allMatches.filter(m => {
+        if (!selectedSeason) return true;
+        return m.season === selectedSeason;
+      });
+
       const matchMap = {};
-      allMatches.forEach(m => {
+      filteredMatches.forEach(m => {
         matchMap[m._id] = m;
       });
 
-      // 按比赛日期降序排序
-      const sortedRecords = uniqueRecords.sort((a, b) => {
+      // 只保留在 filteredMatches 中的记录，并按比赛日期降序排序
+      const filteredRecords = uniqueRecords.filter(r => matchMap.hasOwnProperty(r.matchId));
+      const sortedRecords = filteredRecords.sort((a, b) => {
         const matchA = matchMap[a.matchId] || {};
         const matchB = matchMap[b.matchId] || {};
         const dateA = new Date(matchA.matchDate || 0);
@@ -207,8 +242,8 @@ Page({
     }
   },
 
-  // 加载更多
-  onReachBottom() {
+  // 点击加载更多
+  loadMore() {
     if (this.data.hasMore && !this.data.loading) {
       this.setData({ page: this.data.page + 1 });
       this.loadMatchRecords(true);
@@ -357,6 +392,14 @@ Page({
     }
     wx.navigateTo({
       url: `/pages/player-form/player-form?id=${this.data.playerId}`
+    });
+  },
+
+  // 跳转至比赛详情
+  goToMatch(e) {
+    const matchId = e.currentTarget.dataset.id;
+    wx.navigateTo({
+      url: `/pages/match-detail/match-detail?id=${matchId}`
     });
   },
 

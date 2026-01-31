@@ -85,7 +85,7 @@ Page({
         .get();
 
       const newPlayers = res.data;
-      const allPlayers = reset ? newPlayers : [...this.data.players, ...newPlayers];
+      const allPlayers = reset ? newPlayers : this.data.players.concat(newPlayers);
 
       this.setData({
         players: allPlayers,
