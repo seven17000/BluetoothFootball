@@ -1,7 +1,12 @@
 <view class="container">
+  <!-- 页面标题 -->
+  <view class="page-header">
+    <text class="page-title">球员列表</text>
+  </view>
+
   <!-- 搜索框 -->
   <view class="search-box">
-    <icon type="search" size="16" color="#999"/>
+    <text class="search-icon">🔍</text>
     <input class="search-input" placeholder="搜索球员姓名/号码" bindinput="onSearch" value="{{keyword}}"/>
   </view>
 
@@ -18,20 +23,20 @@
   <view class="player-list" wx:if="{{players.length > 0}}">
     <view class="player-item" wx:for="{{players}}" wx:key="_id" bindtap="goToDetail" data-id="{{item._id}}">
       <view class="player-avatar">
-        <image wx:if="{{item.avatar}}" src="{{item.avatar}}" mode="aspectFill" class="avatar-img"></image>
-        <view wx:else class="avatar-text">{{item.number}}</view>
+        <image wx:if="{{item.avatar || item.photo || item.image}}" src="{{item.avatar || item.photo || item.image}}" mode="aspectFill" class="avatar-img"></image>
+        <view wx:else class="avatar-text" style="background: {{item.avatarColor || '#667eea'}}">{{item.number}}</view>
       </view>
       <view class="player-info">
-        <view class="player-name">
-          <text class="name-text">{{item.name}}</text>
-          <text class="player-number-inline">{{item.number}}</text>
+        <view class="player-name-row">
+          <text class="player-name">{{item.name}}</text>
+          <text class="player-number-inline">{{item.number}}号</text>
         </view>
-        <view class="player-position">{{item.positions.join(' / ')}}</view>
+        <text class="player-position">{{item.position.join(' · ')}}</text>
       </view>
       <view class="player-tags" wx:if="{{item.tags && item.tags.length > 0}}">
         <text class="tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</text>
       </view>
-      <view class="player-arrow">></view>
+      <text class="player-arrow">></text>
     </view>
 
     <!-- 加载更多 -->
@@ -47,12 +52,12 @@
   <!-- 空状态 -->
   <view class="empty-state" wx:else>
     <text class="empty-icon">⚽</text>
-    <text>暂无球员数据</text>
+    <text class="empty-text">暂无球员数据</text>
     <button class="btn btn-primary mt-20" bindtap="addPlayer" wx:if="{{isAdmin}}">添加球员</button>
   </view>
 
   <!-- 添加按钮 -->
   <view class="fab" bindtap="addPlayer" wx:if="{{isAdmin}}">
-    <text>+</text>
+    <text class="fab-icon">+</text>
   </view>
 </view>

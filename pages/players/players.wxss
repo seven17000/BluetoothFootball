@@ -6,40 +6,54 @@ page {
   padding: 20rpx;
 }
 
+/* 页面标题 */
+.page-header {
+  padding: 10rpx 0 30rpx;
+}
+
+.page-title {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #333;
+}
+
 /* 搜索框 */
 .search-box {
   display: flex;
   align-items: center;
   background-color: #fff;
-  border-radius: 40rpx;
-  padding: 16rpx 30rpx;
+  border-radius: 44rpx;
+  padding: 20rpx 30rpx;
   margin-bottom: 20rpx;
 }
 
-.search-box icon {
+.search-icon {
+  font-size: 28rpx;
   margin-right: 16rpx;
 }
 
 .search-input {
   flex: 1;
   font-size: 28rpx;
+  color: #333;
 }
 
 /* 筛选栏 */
 .filter-bar {
   display: flex;
-  justify-content: space-around;
-  background-color: #fff;
-  border-radius: 16rpx;
-  padding: 20rpx;
+  gap: 16rpx;
   margin-bottom: 20rpx;
+  overflow-x: auto;
 }
 
 .filter-item {
+  padding: 16rpx 28rpx;
+  border-radius: 40rpx;
   font-size: 26rpx;
   color: #666;
-  padding: 10rpx 20rpx;
-  border-radius: 20rpx;
+  background-color: #fff;
+  white-space: nowrap;
+  transition: all 0.2s;
 }
 
 .filter-item.active {
@@ -50,106 +64,92 @@ page {
 /* 球员列表 */
 .player-list {
   background-color: #fff;
-  border-radius: 16rpx;
+  border-radius: 24rpx;
   overflow: hidden;
 }
 
 .player-item {
   display: flex;
   align-items: center;
-  padding: 24rpx 30rpx;
+  padding: 28rpx 30rpx;
   border-bottom: 1rpx solid #f0f0f0;
 }
 
 /* 头像 */
 .player-avatar {
-  width: 80rpx;
-  height: 80rpx;
-  margin-right: 16rpx;
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
 }
 
 .player-avatar .avatar-img {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 50%;
+  width: 100%;
+  height: 100%;
 }
 
-.player-avatar .avatar-text {
-  width: 80rpx;
-  height: 80rpx;
-  line-height: 80rpx;
-  text-align: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+.avatar-text {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  font-weight: 600;
   color: #fff;
   border-radius: 50%;
-  font-size: 28rpx;
-  font-weight: bold;
 }
 
 .player-item:last-child {
   border-bottom: none;
 }
 
-.player-number {
-  font-size: 28rpx;
-  color: #1989fa;
-  font-weight: bold;
-  margin-right: 20rpx;
-}
-
-.player-number-inline {
-  font-size: 24rpx;
-  color: #1989fa;
-  font-weight: bold;
-  margin-left: 8rpx;
-}
-
 .player-info {
   flex: 1;
+  margin-left: 24rpx;
 }
 
-.player-name {
-  font-size: 30rpx;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 6rpx;
+.player-name-row {
   display: flex;
   align-items: center;
 }
 
-.name-text {
-  display: inline-block;
-  width: 140rpx;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.player-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333;
 }
 
 .player-number-inline {
   font-size: 24rpx;
   color: #1989fa;
-  font-weight: bold;
-  margin-left: 8rpx;
+  font-weight: 600;
+  margin-left: 12rpx;
 }
 
 .player-position {
   font-size: 24rpx;
   color: #999;
+  margin-top: 6rpx;
+  display: block;
 }
 
 .player-tags {
   display: flex;
-  flex-wrap: wrap;
-  margin-right: 20rpx;
+  gap: 8rpx;
+  margin-right: 16rpx;
 }
 
 .tag {
   font-size: 20rpx;
-  padding: 4rpx 12rpx;
+  padding: 6rpx 16rpx;
   background-color: #e6f7ff;
   color: #1890ff;
-  border-radius: 4rpx;
-  margin-left: 8rpx;
+  border-radius: 6rpx;
 }
 
 .player-arrow {
@@ -162,16 +162,18 @@ page {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 100rpx 40rpx;
+  justify-content: center;
+  padding: 120rpx 40rpx;
 }
 
-.empty-state .empty-icon {
+.empty-icon {
   font-size: 120rpx;
   margin-bottom: 20rpx;
 }
 
-.empty-state text {
+.empty-text {
   color: #999;
+  font-size: 28rpx;
 }
 
 /* 悬浮按钮 */
@@ -183,11 +185,15 @@ page {
   height: 100rpx;
   line-height: 100rpx;
   text-align: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #1989fa 0%, #1067c7 100%);
   color: #fff;
   border-radius: 50%;
-  font-size: 60rpx;
-  box-shadow: 0 8rpx 20rpx rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8rpx 24rpx rgba(25, 137, 250, 0.4);
+}
+
+.fab-icon {
+  font-size: 56rpx;
+  font-weight: 300;
 }
 
 /* 加载提示 */

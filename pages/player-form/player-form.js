@@ -10,8 +10,7 @@ Page({
     formData: {
       name: '',
       number: '',
-      positions: [],
-      phone: '',
+      position: [],
       joinDate: '',
       gender: '',
       age: null,
@@ -21,7 +20,7 @@ Page({
       tags: [],
       ability: {}
     },
-    positions: ['前锋', '中场', '后卫', '边后卫', '门将'],
+    positionOptions: ['前锋', '中场', '后卫', '门将'],
     genders: ['男', '女'],
     genderIndex: 0,
     ageRange: Array.from({ length: 50 }, (_, i) => i + 16), // 16-65岁
@@ -38,11 +37,26 @@ Page({
       { value: '助攻王', label: '助攻王' },
       { value: '精神领袖', label: '精神领袖' }
     ],
-    abilityConfig: FORM_ABILITY_CONFIG
+    allTagsWithCustom: [],
+    customTags: [],
+    abilityConfig: FORM_ABILITY_CONFIG,
+    // 弹窗相关
+    showDialog: false,
+    newTagName: ''
   },
 
   onLoad(options) {
+    // 从本地存储加载自定义标签
+    const customTags = wx.getStorageSync('customTags') || [];
+    // 合并所有标签用于显示
+    const allTagsWithCustom = [
+      ...this.data.allTags,
+      ...customTags.map(t => ({ value: t, label: t, isCustom: true }))
+    ];
+    this.setData({ customTags, allTagsWithCustom });
+
     if (options.id) {
+      console.log('编辑球员, id:', options.id);
       this.setData({
         playerId: options.id,
         isEdit: true
@@ -62,8 +76,10 @@ Page({
     wx.showLoading({ title: '加载中...' });
 
     try {
+      console.log('loadPlayerData - playerId:', this.data.playerId);
       const res = await db.collection('players').doc(this.data.playerId).get();
       const player = res.data;
+      console.log('加载的球员数据:', player);
 
       // 初始化能力值对象（如果没有则创建默认值为60）
       const ability = {};
@@ -97,17 +113,17 @@ Page({
   // 位置切换（多选）
   togglePosition(e) {
     const position = e.currentTarget.dataset.position;
-    const positions = [...this.data.formData.positions];
-    const index = positions.indexOf(position);
+    const positionArr = [...this.data.formData.position];
+    const index = positionArr.indexOf(position);
 
     if (index > -1) {
-      positions.splice(index, 1);
+      positionArr.splice(index, 1);
     } else {
-      positions.push(position);
+      positionArr.push(position);
     }
 
     this.setData({
-      'formData.positions': positions
+      'formData.position': positionArr
     });
   },
 
@@ -149,17 +165,63 @@ Page({
   chooseAvatar() {
     wx.chooseImage({
       count: 1,
-      success: (res) => {
+      success: async (res) => {
         const tempFilePath = res.tempFilePaths[0];
-        this.setData({
-          'formData.avatar': tempFilePath
+
+        // 裁剪图片
+        wx.cropImage({
+          src: tempFilePath,
+          success: async (cropRes) => {
+            const croppedPath = cropRes.tempFilePath;
+            wx.showLoading({ title: '上传中...' });
+
+            try {
+              // 上传到云存储
+              const uploadResult = await wx.cloud.uploadFile({
+                cloudPath: `avatars/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.png`,
+                filePath: croppedPath
+              });
+
+              // 保存云存储文件ID
+              this.setData({
+                'formData.avatar': uploadResult.fileID
+              });
+              console.log('头像上传成功:', uploadResult.fileID);
+              wx.showToast({ title: '上传成功', icon: 'success' });
+            } catch (error) {
+              console.error('上传头像失败', error);
+              wx.showToast({ title: '上传失败', icon: 'none' });
+            } finally {
+              wx.hideLoading();
+            }
+          },
+          fail: (err) => {
+            console.log('裁剪取消', err);
+          }
         });
       }
     });
   },
 
-  // 切换标签
+  // 切换预设标签
   toggleTag(e) {
+    const value = e.currentTarget.dataset.value;
+    const tags = [...this.data.formData.tags];
+    const index = tags.indexOf(value);
+
+    if (index > -1) {
+      tags.splice(index, 1);
+    } else {
+      tags.push(value);
+    }
+
+    this.setData({
+      'formData.tags': tags
+    });
+  },
+
+  // 切换自定义标签
+  toggleCustomTag(e) {
     const value = e.currentTarget.dataset.value;
     const tags = [...this.data.formData.tags];
     const index = tags.indexOf(value);
@@ -183,9 +245,71 @@ Page({
     });
   },
 
+  // 显示添加标签弹窗
+  showAddTagDialog() {
+    this.setData({
+      showDialog: true,
+      newTagName: ''
+    });
+  },
+
+  // 隐藏弹窗
+  hideDialog() {
+    this.setData({
+      showDialog: false,
+      newTagName: ''
+    });
+  },
+
+  // 标签输入
+  onTagInput(e) {
+    this.setData({
+      newTagName: e.detail.value
+    });
+  },
+
+  // 确认添加自定义标签
+  confirmAddTag() {
+    const newTag = this.data.newTagName.trim();
+    if (!newTag) {
+      wx.showToast({ title: '请输入标签名称', icon: 'none' });
+      return;
+    }
+
+    // 检查是否已存在
+    const allTags = [...this.data.allTags.map(t => t.value), ...this.data.customTags];
+    if (allTags.includes(newTag)) {
+      wx.showToast({ title: '标签已存在', icon: 'none' });
+      return;
+    }
+
+    // 添加到自定义标签
+    const customTags = [...this.data.customTags, newTag];
+    // 合并所有标签
+    const allTagsWithCustom = [
+      ...this.data.allTags,
+      ...customTags.map(t => ({ value: t, label: t, isCustom: true }))
+    ];
+    this.setData({ customTags, allTagsWithCustom });
+
+    // 保存到本地存储
+    wx.setStorageSync('customTags', customTags);
+
+    // 关闭弹窗
+    this.hideDialog();
+
+    // 自动选中新标签
+    const tags = [...this.data.formData.tags, newTag];
+    this.setData({
+      'formData.tags': tags
+    });
+
+    wx.showToast({ title: '添加成功', icon: 'success' });
+  },
+
   // 提交表单
   async submitForm() {
-    const { name, number, positions } = this.data.formData;
+    const { name, number, position } = this.data.formData;
 
     // 验证必填项
     if (!name.trim()) {
@@ -196,7 +320,7 @@ Page({
       wx.showToast({ title: '请输入球衣号码', icon: 'none' });
       return;
     }
-    if (!positions || positions.length === 0) {
+    if (!position || position.length === 0) {
       wx.showToast({ title: '请选择位置', icon: 'none' });
       return;
     }
@@ -204,17 +328,24 @@ Page({
     wx.showLoading({ title: '保存中...' });
 
     try {
+      // 移除 _id 字段（编辑时可能存在）
+      const { _id, ...cleanFormData } = this.data.formData;
       const formData = {
-        ...this.data.formData,
+        ...cleanFormData,
         number: parseInt(number),
         updateTime: new Date()
       };
+      console.log('提交数据:', formData);
 
       if (this.data.isEdit) {
         // 更新
-        await db.collection('players').doc(this.data.playerId).update({
+        console.log('更新球员ID:', this.data.playerId);
+        console.log('更新数据:', formData);
+
+        const updateRes = await db.collection('players').doc(this.data.playerId).update({
           data: formData
         });
+        console.log('更新结果:', updateRes);
       } else {
         // 新增
         formData.createTime = new Date();
@@ -224,15 +355,15 @@ Page({
         });
       }
 
-      wx.showToast({ title: '保存成功' });
+      wx.hideLoading();
+      wx.showToast({ title: '保存成功', icon: 'success', duration: 1500 });
       setTimeout(() => {
         wx.navigateBack();
       }, 1500);
     } catch (error) {
       console.error('保存失败', error);
-      wx.showToast({ title: '保存失败', icon: 'none' });
-    } finally {
       wx.hideLoading();
+      wx.showToast({ title: '保存失败', icon: 'none' });
     }
   }
 });

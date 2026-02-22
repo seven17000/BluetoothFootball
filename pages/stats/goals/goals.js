@@ -34,6 +34,11 @@ Page({
   },
 
   onShow() {
+    // 如果赛季还没加载完成，跳过这次调用，等待 loadSeasons 完成后自动加载
+    if (this.data.seasons.length === 0) {
+      return;
+    }
+
     if (this.data.currentTab === 'matches') {
       if (this.data.matchList.length === 0) {
         this.loadMatchList(true);
@@ -292,7 +297,9 @@ Page({
           return {
             playerId,
             name: player.name || '未知',
-            position: player.position || '',
+            position: player.position ? player.position.join(' / ') : '',
+            avatar: player.avatar || player.photo || player.image || '',
+            number: player.number || '',
             value: currentTab === 'goals' ? stats.goals : stats.assists
           };
         })

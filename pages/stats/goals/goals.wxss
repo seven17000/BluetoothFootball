@@ -6,137 +6,145 @@ page {
   padding: 20rpx;
 }
 
-/* 赛季选择器 */
-.season-selector {
-  margin-bottom: 20rpx;
-}
-
-/* 赛季数据汇总 */
-.season-summary {
-  background-color: #fff;
-  border-radius: 16rpx;
-  padding: 24rpx 20rpx;
-  margin-bottom: 20rpx;
-}
-
-.summary-row {
+/* 页面头部 */
+.page-header {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10rpx 0 30rpx;
 }
 
-.summary-item {
-  text-align: center;
-  flex: 1;
-}
-
-.summary-value {
-  display: block;
-  font-size: 36rpx;
-  font-weight: bold;
+.page-title {
+  font-size: 40rpx;
+  font-weight: 700;
   color: #333;
-  margin-bottom: 6rpx;
-}
-
-.summary-label {
-  font-size: 22rpx;
-  color: #999;
-}
-
-.summary-item.win .summary-value {
-  color: #52c41a;
-}
-
-.summary-item.draw .summary-value {
-  color: #faad14;
-}
-
-.summary-item.loss .summary-value {
-  color: #fa5151;
 }
 
 .season-picker {
   display: flex;
   align-items: center;
+  padding: 16rpx 24rpx;
   background-color: #fff;
-  border-radius: 12rpx;
-  padding: 20rpx 24rpx;
-}
-
-.season-label {
-  font-size: 28rpx;
-  color: #666;
+  border-radius: 32rpx;
 }
 
 .season-value {
-  flex: 1;
-  font-size: 28rpx;
+  font-size: 26rpx;
   color: #333;
-  font-weight: bold;
 }
 
 .season-arrow {
-  font-size: 20rpx;
+  font-size: 18rpx;
   color: #999;
-  margin-left: 10rpx;
+  margin-left: 8rpx;
 }
 
-/* Tab栏 */
+/* 赛季数据统计网格 */
+.season-stats-grid {
+  display: flex;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+}
+
+.stat-card {
+  width: calc(20% - 12rpx);
+  background-color: #e6f7ff;
+  border-radius: 16rpx;
+  padding: 20rpx 8rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-card .stat-value {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #1989fa;
+}
+
+.stat-card .stat-label {
+  font-size: 20rpx;
+  color: #666;
+  margin-top: 4rpx;
+}
+
+.stat-card.win {
+  background-color: #f6ffed;
+}
+
+.stat-card.win .stat-value {
+  color: #52c41a;
+}
+
+.stat-card.draw {
+  background-color: #fffbe6;
+}
+
+.stat-card.draw .stat-value {
+  color: #faad14;
+}
+
+.stat-card.loss {
+  background-color: #f5f5f5;
+}
+
+.stat-card.loss .stat-value {
+  color: #666;
+}
+
+/* Tab 切换 */
 .tab-bar {
   display: flex;
   background-color: #fff;
-  border-radius: 16rpx;
-  padding: 10rpx;
-  margin-bottom: 20rpx;
+  border-radius: 48rpx;
+  padding: 8rpx;
+  margin-bottom: 24rpx;
 }
 
 .tab-item {
   flex: 1;
   text-align: center;
-  padding: 20rpx;
+  padding: 24rpx;
   font-size: 28rpx;
+  font-weight: 500;
   color: #666;
-  border-radius: 12rpx;
+  border-radius: 40rpx;
+  transition: all 0.2s;
 }
 
 .tab-item.active {
   background-color: #1989fa;
   color: #fff;
+  font-weight: 600;
 }
 
 /* 卡片样式 */
 .card {
   background-color: #fff;
-  border-radius: 16rpx;
+  border-radius: 24rpx;
   padding: 30rpx;
   margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
 }
 
 .card-title {
-  font-size: 32rpx;
-  font-weight: bold;
+  font-size: 30rpx;
+  font-weight: 600;
   color: #333;
   margin-bottom: 20rpx;
 }
 
-/* 图表 */
-.chart-card {
-  min-height: 400rpx;
-}
-
-.chart-canvas {
-  width: 100%;
-  height: 350rpx;
-}
-
-/* 排行榜 */
+/* 排行榜列表 */
 .rank-list {
-  margin: -10rpx 0;
+  margin: 0 -10rpx;
 }
 
 .rank-item {
   display: flex;
   align-items: center;
-  padding: 20rpx 0;
+  padding: 20rpx 10rpx;
   border-bottom: 1rpx solid #f0f0f0;
 }
 
@@ -145,108 +153,96 @@ page {
 }
 
 .rank-num {
-  width: 60rpx;
-  height: 60rpx;
-  line-height: 60rpx;
+  width: 48rpx;
+  height: 48rpx;
+  line-height: 48rpx;
   text-align: center;
   border-radius: 50%;
   background-color: #f0f0f0;
-  font-size: 28rpx;
-  font-weight: bold;
-  margin-right: 20rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #fff;
 }
 
 .rank-num.top-1 {
   background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
-  color: #fff;
 }
 
 .rank-num.top-2 {
   background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);
-  color: #fff;
 }
 
 .rank-num.top-3 {
   background: linear-gradient(135deg, #cd7f32 0%, #b87333 100%);
+}
+
+.rank-avatar {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 20rpx;
+  overflow: hidden;
+}
+
+.rank-avatar .avatar-img {
+  width: 100%;
+  height: 100%;
+}
+
+.rank-avatar .avatar-text {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  font-weight: 600;
   color: #fff;
+  border-radius: 50%;
 }
 
 .rank-info {
   flex: 1;
+  margin-left: 20rpx;
+  display: flex;
+  flex-direction: column;
 }
 
 .player-name {
-  display: block;
   font-size: 30rpx;
-  font-weight: bold;
+  font-weight: 600;
   color: #333;
-  margin-bottom: 6rpx;
 }
 
 .player-position {
   font-size: 24rpx;
   color: #999;
+  margin-top: 4rpx;
 }
 
 .rank-value {
-  text-align: right;
+  display: flex;
+  align-items: baseline;
 }
 
-.rank-value .value {
+.value {
   font-size: 36rpx;
-  font-weight: bold;
+  font-weight: 700;
   color: #1989fa;
 }
 
-.rank-value .unit {
-  font-size: 24rpx;
+.unit {
+  font-size: 22rpx;
   color: #999;
   margin-left: 4rpx;
 }
 
-.empty-text {
-  text-align: center;
-  color: #999;
-  padding: 40rpx 0;
-}
-
-/* 统计摘要 */
-.summary-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff;
-}
-
-.summary-title {
-  font-size: 28rpx;
-  opacity: 0.9;
-  margin-bottom: 20rpx;
-}
-
-.summary-stats {
-  display: flex;
-  justify-content: space-around;
-}
-
-.summary-item {
-  text-align: center;
-}
-
-.summary-item .value {
-  display: block;
-  font-size: 48rpx;
-  font-weight: bold;
-  margin-bottom: 8rpx;
-}
-
-.summary-item .label {
-  font-size: 24rpx;
-  opacity: 0.9;
-}
-
-/* 比赛列表样式 */
+/* 比赛列表 */
 .match-list {
-  margin: 0 -20rpx;
-  padding: 0 20rpx;
+  margin: 0 -10rpx;
 }
 
 .match-item {
@@ -266,17 +262,17 @@ page {
 }
 
 .match-team {
-  font-size: 32rpx;
-  font-weight: bold;
+  font-size: 28rpx;
+  font-weight: 600;
   color: #1989fa;
   flex: 1;
 }
 
 .match-result-capsule {
   font-size: 24rpx;
-  font-weight: bold;
+  font-weight: 600;
   color: #fff;
-  padding: 6rpx 16rpx;
+  padding: 8rpx 20rpx;
   border-radius: 20rpx;
   flex: 1;
   text-align: center;
@@ -295,8 +291,8 @@ page {
 }
 
 .match-opponent {
-  font-size: 32rpx;
-  font-weight: bold;
+  font-size: 28rpx;
+  font-weight: 600;
   color: #1989fa;
   flex: 1;
   text-align: right;
@@ -315,7 +311,7 @@ page {
 }
 
 .match-datetime {
-  font-size: 24rpx;
+  font-size: 22rpx;
   color: #666;
   flex: 1;
   text-align: center;
@@ -323,7 +319,7 @@ page {
 
 .match-datetime text {
   display: inline-block;
-  margin-right: 16rpx;
+  margin-right: 12rpx;
 }
 
 .match-datetime text:last-child {
@@ -337,9 +333,18 @@ page {
   text-align: right;
 }
 
+/* 空状态 */
+.empty-text {
+  text-align: center;
+  padding: 60rpx 0;
+  color: #999;
+  font-size: 26rpx;
+}
+
+/* 加载提示 */
 .loading-tip {
   text-align: center;
-  padding: 20rpx;
+  padding: 30rpx 0;
   color: #999;
   font-size: 24rpx;
 }

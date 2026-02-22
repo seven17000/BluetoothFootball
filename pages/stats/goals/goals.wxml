@@ -1,9 +1,9 @@
 <view class="container">
-  <!-- 赛季选择 -->
-  <view class="season-selector" wx:if="{{seasons.length > 0}}">
-    <picker mode="selector" range="{{seasons}}" bindchange="onSeasonChange">
+  <!-- 页面头部 -->
+  <view class="page-header">
+    <text class="page-title">数据统计</text>
+    <picker mode="selector" range="{{seasons}}" bindchange="onSeasonChange" wx:if="{{seasons.length > 0}}">
       <view class="season-picker">
-        <text class="season-label">赛季：</text>
         <text class="season-value">{{selectedSeason}}</text>
         <text class="season-arrow">▼</text>
       </view>
@@ -11,28 +11,26 @@
   </view>
 
   <!-- 赛季数据统计 -->
-  <view class="season-summary">
-    <view class="summary-row">
-      <view class="summary-item">
-        <text class="summary-value">{{seasonStats.goals}}</text>
-        <text class="summary-label">进球</text>
-      </view>
-      <view class="summary-item">
-        <text class="summary-value">{{seasonStats.conceded}}</text>
-        <text class="summary-label">丢球</text>
-      </view>
-      <view class="summary-item win">
-        <text class="summary-value">{{seasonStats.wins}}</text>
-        <text class="summary-label">胜</text>
-      </view>
-      <view class="summary-item draw">
-        <text class="summary-value">{{seasonStats.draws}}</text>
-        <text class="summary-label">平</text>
-      </view>
-      <view class="summary-item loss">
-        <text class="summary-value">{{seasonStats.losses}}</text>
-        <text class="summary-label">负</text>
-      </view>
+  <view class="season-stats-grid">
+    <view class="stat-card">
+      <text class="stat-value">{{seasonStats.goals}}</text>
+      <text class="stat-label">进球</text>
+    </view>
+    <view class="stat-card">
+      <text class="stat-value">{{seasonStats.conceded}}</text>
+      <text class="stat-label">丢球</text>
+    </view>
+    <view class="stat-card win">
+      <text class="stat-value">{{seasonStats.wins}}</text>
+      <text class="stat-label">胜</text>
+    </view>
+    <view class="stat-card draw">
+      <text class="stat-value">{{seasonStats.draws}}</text>
+      <text class="stat-label">平</text>
+    </view>
+    <view class="stat-card loss">
+      <text class="stat-value">{{seasonStats.losses}}</text>
+      <text class="stat-label">负</text>
     </view>
   </view>
 
@@ -49,6 +47,10 @@
     <view class="rank-list" wx:if="{{rankList.length > 0}}">
       <view class="rank-item" wx:for="{{rankList}}" wx:key="playerId">
         <view class="rank-num {{index < 3 ? 'top-' + (index + 1) : ''}}">{{index + 1}}</view>
+        <view class="rank-avatar">
+          <image wx:if="{{item.avatar || item.photo || item.image}}" src="{{item.avatar || item.photo || item.image}}" mode="aspectFill" class="avatar-img"></image>
+          <view wx:else class="avatar-text" style="background: {{item.avatarColor || '#667eea'}}">{{item.number}}</view>
+        </view>
         <view class="rank-info">
           <text class="player-name">{{item.name}}</text>
           <text class="player-position">{{item.position}}</text>
@@ -70,23 +72,23 @@
     <view class="match-list" wx:if="{{matchList.length > 0}}">
       <view class="match-item" wx:for="{{matchList}}" wx:key="_id" bindtap="goToDetail" data-id="{{item._id}}">
         <view class="match-row-1">
-          <view class="match-team">蓝牙</view>
+          <text class="match-team">蓝牙</text>
           <view class="match-result-capsule {{item.resultClass}}">{{item.goals}}-{{item.conceded}} {{item.result}}</view>
-          <view class="match-opponent">{{item.opponent}}</view>
+          <text class="match-opponent">{{item.opponent}}</text>
         </view>
         <view class="match-row-2">
-          <view class="match-jersey-left" wx:if="{{item.jerseyColor}}">球衣：{{item.jerseyColor}}</view>
+          <text class="match-jersey-left" wx:if="{{item.jerseyColor}}">球衣：{{item.jerseyColor}}</text>
           <view class="match-datetime">
             <text>{{item.month}}月{{item.day}}日</text>
             <text>{{item.isHome ? '主场' : '客场'}}</text>
             <text wx:if="{{item.location}}">{{item.location}}</text>
           </view>
-          <view class="match-jersey-right" wx:if="{{item.opponentJersey}}">球衣：{{item.opponentJersey}}</view>
+          <text class="match-jersey-right" wx:if="{{item.opponentJersey}}">球衣：{{item.opponentJersey}}</text>
         </view>
       </view>
     </view>
-    <view class="empty-text" wx:else>
-      暂无比赛记录
+    <view class="empty-state-center" wx:else>
+      <text class="empty-text">暂无比赛记录</text>
     </view>
     <!-- 加载更多 -->
     <view class="loading-tip" wx:if="{{hasMoreMatch}}">

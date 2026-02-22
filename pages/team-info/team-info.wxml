@@ -1,0 +1,81 @@
+<view class="container">
+  <!-- 头部背景 -->
+  <view class="header-bg">
+    <view class="team-logo-wrapper">
+      <image class="team-logo-img" src="/images/team-logo.png" mode="aspectFit"></image>
+    </view>
+    <text class="team-name">蓝牙足球队</text>
+    <text class="team-days">成立 {{teamDays}} 天</text>
+    <!-- 管理员编辑按钮 -->
+    <view class="edit-btn" bindtap="editTeamInfo" wx:if="{{isAdmin}}">
+      <text>编辑</text>
+    </view>
+  </view>
+
+  <!-- 球队信息卡片 -->
+  <view class="info-card">
+    <view class="info-item">
+      <text class="info-label">成立时间</text>
+      <text class="info-value">{{formationDate}}</text>
+    </view>
+    <view class="divider"></view>
+    <view class="info-item">
+      <text class="info-label">成立地点</text>
+      <text class="info-value">{{location}}</text>
+    </view>
+    <view class="divider"></view>
+    <view class="info-item">
+      <text class="info-label">活跃球员数</text>
+      <text class="info-value">{{activePlayerCount}} 人</text>
+    </view>
+    <view class="divider"></view>
+    <view class="info-item">
+      <text class="info-label">全部球员数</text>
+      <text class="info-value">{{totalPlayerCount}} 人</text>
+    </view>
+  </view>
+
+  <!-- 球队介绍 -->
+  <view class="intro-card">
+    <text class="intro-content">{{description}}</text>
+  </view>
+
+  <!-- 编辑弹窗 -->
+  <view class="modal-mask" wx:if="{{showEditModal}}" bindtap="closeModal"></view>
+  <view class="modal-content" wx:if="{{showEditModal}}">
+    <view class="modal-header">
+      <text class="modal-title">编辑球队信息</text>
+      <text class="modal-close" bindtap="closeModal">×</text>
+    </view>
+    <view class="modal-body">
+      <view class="form-group">
+        <text class="form-label">成立时间</text>
+        <picker mode="date" fields="month" value="{{editData.formationDate}}" bindchange="bindDateChange">
+          <view class="form-picker">
+            {{editData.formationDate || '请选择'}}
+          </view>
+        </picker>
+      </view>
+      <view class="form-group">
+        <text class="form-label">成立地点</text>
+        <input class="form-input" placeholder="请输入成立地点" value="{{editData.location}}" bindinput="bindLocationInput"/>
+      </view>
+      <view class="form-group">
+        <text class="form-label">活跃球员数</text>
+        <input class="form-input" type="number" placeholder="请输入活跃球员数" value="{{editData.activePlayerCount}}" bindinput="bindActivePlayerCountInput"/>
+      </view>
+      <view class="form-group">
+        <text class="form-label">全部球员数</text>
+        <input class="form-input" type="number" placeholder="请输入全部球员数" value="{{editData.totalPlayerCount}}" bindinput="bindTotalPlayerCountInput"/>
+      </view>
+      <view class="form-group">
+        <text class="form-label">球队介绍</text>
+        <textarea class="form-textarea" placeholder="请输入球队介绍" value="{{editData.description}}" bindinput="bindDescriptionInput"/>
+      </view>
+    </view>
+    <view class="modal-footer">
+      <button class="btn btn-default" bindtap="closeModal">取消</button>
+      <button class="btn btn-primary" bindtap="saveTeamInfo">保存</button>
+    </view>
+  </view>
+</view>

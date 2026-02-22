@@ -6,6 +6,38 @@ page {
   padding: 20rpx;
 }
 
+/* 赛季选择器 */
+.season-selector {
+  margin-bottom: 20rpx;
+}
+
+.season-picker {
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  border-radius: 12rpx;
+  padding: 20rpx 24rpx;
+}
+
+.season-label {
+  font-size: 28rpx;
+  color: #666;
+}
+
+.season-value {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333;
+  font-weight: bold;
+}
+
+.season-arrow {
+  font-size: 20rpx;
+  color: #999;
+  margin-left: 10rpx;
+}
+
+/* Tab栏 */
 .tab-bar {
   display: flex;
   background-color: #fff;
@@ -28,25 +60,7 @@ page {
   color: #fff;
 }
 
-.season-filter {
-  margin-bottom: 20rpx;
-}
-
-.filter-picker {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20rpx 30rpx;
-  background-color: #fff;
-  border-radius: 12rpx;
-  font-size: 28rpx;
-}
-
-.filter-picker .arrow {
-  font-size: 20rpx;
-  color: #999;
-}
-
+/* 卡片样式 */
 .card {
   background-color: #fff;
   border-radius: 16rpx;
@@ -61,15 +75,7 @@ page {
   margin-bottom: 20rpx;
 }
 
-.chart-card {
-  min-height: 400rpx;
-}
-
-.chart-canvas {
-  width: 100%;
-  height: 350rpx;
-}
-
+/* 排行榜 */
 .rank-list {
   margin: -10rpx 0;
 }
@@ -112,6 +118,34 @@ page {
   color: #fff;
 }
 
+.rank-avatar {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 20rpx;
+  overflow: hidden;
+}
+
+.rank-avatar .avatar-img {
+  width: 100%;
+  height: 100%;
+}
+
+.rank-avatar .avatar-text {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #fff;
+  border-radius: 50%;
+}
+
 .rank-info {
   flex: 1;
 }
@@ -151,34 +185,103 @@ page {
   padding: 40rpx 0;
 }
 
-.summary-card {
-  background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
-  color: #fff;
+/* 比赛列表样式 */
+.match-list {
+  margin: 0 -20rpx;
+  padding: 0 20rpx;
 }
 
-.summary-title {
-  font-size: 28rpx;
-  opacity: 0.9;
-  margin-bottom: 20rpx;
+.match-item {
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
 }
 
-.summary-stats {
+.match-item:last-child {
+  border-bottom: none;
+}
+
+.match-row-1 {
   display: flex;
-  justify-content: space-around;
-}
-
-.summary-item {
-  text-align: center;
-}
-
-.summary-item .value {
-  display: block;
-  font-size: 48rpx;
-  font-weight: bold;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 8rpx;
 }
 
-.summary-item .label {
+.match-team {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #1989fa;
+  flex: 1;
+}
+
+.match-result-capsule {
   font-size: 24rpx;
-  opacity: 0.9;
+  font-weight: bold;
+  color: #fff;
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+  flex: 1;
+  text-align: center;
+}
+
+.match-result-capsule.win {
+  background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+}
+
+.match-result-capsule.draw {
+  background: linear-gradient(135deg, #faad14 0%, #d48806 100%);
+}
+
+.match-result-capsule.loss {
+  background: linear-gradient(135deg, #fa5151 0%, #cf1322 100%);
+}
+
+.match-opponent {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #1989fa;
+  flex: 1;
+  text-align: right;
+}
+
+.match-row-2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.match-jersey-left {
+  font-size: 22rpx;
+  color: #999;
+  flex: 1;
+}
+
+.match-datetime {
+  font-size: 24rpx;
+  color: #666;
+  flex: 1;
+  text-align: center;
+}
+
+.match-datetime text {
+  display: inline-block;
+  margin-right: 16rpx;
+}
+
+.match-datetime text:last-child {
+  margin-right: 0;
+}
+
+.match-jersey-right {
+  font-size: 22rpx;
+  color: #999;
+  flex: 1;
+  text-align: right;
+}
+
+.loading-tip {
+  text-align: center;
+  padding: 20rpx;
+  color: #999;
+  font-size: 24rpx;
 }

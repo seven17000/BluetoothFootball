@@ -57,7 +57,7 @@ Page({
         });
       }
 
-      // 位置筛选
+      // 位置筛选 - Cloud DB 直接用值查询数组字段是否包含该值
       if (this.data.position) {
         query = query.where({
           position: this.data.position
@@ -69,13 +69,26 @@ Page({
         this.setData({ page: 1, hasMore: true });
       }
 
-      const page = this.data.page;
+      // 如果是重置，使用 page 1；否则使用当前页码
+      const page = reset ? 1 : this.data.page;
       const skip = (page - 1) * PAGE_SIZE;
 
-      // 获取总数
-      const countRes = await db.collection('players').where(
-        query._queryCondition || {}
-      ).count();
+      // 获取总数 - 需要重新创建不含 orderBy 的查询
+      let countQuery = db.collection('players');
+      if (this.data.keyword) {
+        countQuery = countQuery.where({
+          name: db.RegExp({
+            regexp: this.data.keyword,
+            options: 'i'
+          })
+        });
+      }
+      if (this.data.position) {
+        countQuery = countQuery.where({
+          position: this.data.position
+        });
+      }
+      const countRes = await countQuery.count();
       const total = countRes.total;
 
       // 获取当前页数据
@@ -84,7 +97,22 @@ Page({
         .limit(PAGE_SIZE)
         .get();
 
-      const newPlayers = res.data;
+      const newPlayers = res.data.map(player => {
+        // 确保 position 是数组（兼容旧的 positions 字段）
+        let positionData = player.position || player.positions || [];
+        if (typeof positionData === 'string') {
+          positionData = positionData.split(',').map(p => p.trim()).filter(p => p);
+        } else if (!Array.isArray(positionData)) {
+          positionData = [];
+        }
+        player.position = positionData;
+
+        // 兼容头像字段
+        if (!player.avatar && (player.photo || player.image)) {
+          player.avatar = player.photo || player.image;
+        }
+        return player;
+      });
       const allPlayers = reset ? newPlayers : this.data.players.concat(newPlayers);
 
       this.setData({

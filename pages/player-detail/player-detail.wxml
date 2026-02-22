@@ -3,12 +3,15 @@
   <view class="card profile-card">
     <view class="profile-header">
       <view class="avatar-wrapper">
-        <image wx:if="{{player.avatar}}" src="{{player.avatar}}" mode="aspectFill" class="avatar-img"></image>
+        <image wx:if="{{player.avatar || player.photo || player.image}}" src="{{player.avatar || player.photo || player.image}}" mode="aspectFill" class="avatar-img"></image>
         <view wx:else class="avatar">{{player.number}}</view>
       </view>
       <view class="profile-info">
         <view class="name">{{player.name}}</view>
-        <view class="position">{{player.positions.join(' / ')}} | 球衣{{player.number}}号</view>
+        <view class="position">
+          <text wx:for="{{player.position}}" wx:key="*this">{{item}}{{index < player.position.length - 1 ? '，' : ''}}</text>
+          | 球衣{{player.number}}号
+        </view>
         <view class="tags" wx:if="{{player.tags && player.tags.length > 0}}">
           <text class="tag" wx:for="{{player.tags}}" wx:key="*this">{{item}}</text>
         </view>

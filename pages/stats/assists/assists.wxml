@@ -1,40 +1,39 @@
 <view class="container">
-  <!-- 统计类型切换 -->
-  <view class="tab-bar">
-    <view class="tab-item {{currentTab === 'goals' ? 'active' : ''}}" bindtap="switchTab" data-tab="goals">进球榜</view>
-    <view class="tab-item {{currentTab === 'assists' ? 'active' : ''}}" bindtap="switchTab" data-tab="assists">助攻榜</view>
-    <view class="tab-item {{currentTab === 'attendance' ? 'active' : ''}}" bindtap="switchTab" data-tab="attendance">出勤榜</view>
-  </view>
-
-  <!-- 赛季筛选 -->
-  <view class="season-filter">
+  <!-- 赛季选择 -->
+  <view class="season-selector" wx:if="{{seasons.length > 0}}">
     <picker mode="selector" range="{{seasons}}" bindchange="onSeasonChange">
-      <view class="filter-picker">
-        <text>{{currentSeason || '选择赛季'}}</text>
-        <text class="arrow">▼</text>
+      <view class="season-picker">
+        <text class="season-label">赛季：</text>
+        <text class="season-value">{{selectedSeason}}</text>
+        <text class="season-arrow">▼</text>
       </view>
     </picker>
   </view>
 
-  <!-- 图表展示 -->
-  <view class="card chart-card">
-    <view class="card-title">{{chartTitle}}</view>
-    <canvas canvas-id="barChart" id="barChart" class="chart-canvas"></canvas>
+  <!-- 统计类型切换 -->
+  <view class="tab-bar">
+    <view class="tab-item {{currentTab === 'goals' ? 'active' : ''}}" bindtap="switchTab" data-tab="goals">进球</view>
+    <view class="tab-item {{currentTab === 'assists' ? 'active' : ''}}" bindtap="switchTab" data-tab="assists">助攻</view>
+    <view class="tab-item {{currentTab === 'matches' ? 'active' : ''}}" bindtap="switchTab" data-tab="matches">比赛</view>
   </view>
 
-  <!-- 排行榜列表 -->
-  <view class="card">
-    <view class="card-title">详细排名</view>
+  <!-- 排行榜列表（进球/助攻） -->
+  <view class="card" wx:if="{{currentTab !== 'matches'}}">
+    <view class="card-title">{{chartTitle}}</view>
     <view class="rank-list" wx:if="{{rankList.length > 0}}">
       <view class="rank-item" wx:for="{{rankList}}" wx:key="playerId">
         <view class="rank-num {{index < 3 ? 'top-' + (index + 1) : ''}}">{{index + 1}}</view>
+        <view class="rank-avatar">
+          <image wx:if="{{item.avatar || item.photo || item.image}}" src="{{item.avatar || item.photo || item.image}}" mode="aspectFill" class="avatar-img"></image>
+          <view wx:else class="avatar-text" style="background: {{item.avatarColor || '#667eea'}}">{{item.number}}</view>
+        </view>
         <view class="rank-info">
           <text class="player-name">{{item.name}}</text>
           <text class="player-position">{{item.position}}</text>
         </view>
         <view class="rank-value">
           <text class="value">{{item.value}}</text>
-          <text class="unit">{{currentTab === 'goals' ? '球' : (currentTab === 'assists' ? '助攻' : '场')}}</text>
+          <text class="unit">{{currentTab === 'goals' ? '球' : '助攻'}}</text>
         </view>
       </view>
     </view>
@@ -43,22 +42,37 @@
     </view>
   </view>
 
-  <!-- 统计摘要 -->
-  <view class="card summary-card">
-    <view class="summary-title">赛季统计</view>
-    <view class="summary-stats">
-      <view class="summary-item">
-        <text class="value">{{summary.total}}</text>
-        <text class="label">总{{currentTab === 'goals' ? '进球' : (currentTab === 'assists' ? '助攻' : '出勤')}}</text>
+  <!-- 比赛列表 -->
+  <view class="card" wx:if="{{currentTab === 'matches'}}">
+    <view class="card-title">比赛记录</view>
+    <view class="match-list" wx:if="{{matchList.length > 0}}">
+      <view class="match-item" wx:for="{{matchList}}" wx:key="_id" bindtap="goToDetail" data-id="{{item._id}}">
+        <view class="match-row-1">
+          <view class="match-team">蓝牙</view>
+          <view class="match-result-capsule {{item.resultClass}}">{{item.goals}}-{{item.conceded}} {{item.result}}</view>
+          <view class="match-opponent">{{item.opponent}}</view>
+        </view>
+        <view class="match-row-2">
+          <view class="match-jersey-left" wx:if="{{item.jerseyColor}}">球衣：{{item.jerseyColor}}</view>
+          <view class="match-datetime">
+            <text>{{item.month}}月{{item.day}}日</text>
+            <text>{{item.isHome ? '主场' : '客场'}}</text>
+            <text wx:if="{{item.location}}">{{item.location}}</text>
+          </view>
+          <view class="match-jersey-right" wx:if="{{item.opponentJersey}}">球衣：{{item.opponentJersey}}</view>
+        </view>
       </view>
-      <view class="summary-item">
-        <text class="value">{{summary.avg}}</text>
-        <text class="label">场均</text>
-      </view>
-      <view class="summary-item">
-        <text class="value">{{summary.topPlayer}}</text>
-        <text class="label">榜首</text>
-      </view>
+    </view>
+    <view class="empty-text" wx:else>
+      暂无比赛记录
+    </view>
+    <!-- 加载更多 -->
+    <view class="loading-tip" wx:if="{{hasMoreMatch}}">
+      <text wx:if="{{isLoading}}">加载中...</text>
+      <text wx:else>上拉加载更多</text>
+    </view>
+    <view class="loading-tip" wx:if="{{!hasMoreMatch && matchList.length > 0}}">
+      <text>没有更多了</text>
     </view>
   </view>
 </view>

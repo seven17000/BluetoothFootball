@@ -47,6 +47,9 @@ Page({
     try {
       const playerRes = await db.collection('players').doc(this.data.playerId).get();
       const player = playerRes.data;
+      console.log('球员数据:', player);
+      console.log('球员头像:', player.avatar);
+      console.log('球员位置数据:', player.position);
 
       if (!player) {
         wx.hideLoading();
@@ -56,6 +59,21 @@ Page({
         }, 1500);
         return;
       }
+
+      // 确保 position 是数组（兼容旧的 positions 字段）
+      let positionData = player.position || player.positions || [];
+      if (typeof positionData === 'string') {
+        positionData = positionData.split(',').map(p => p.trim()).filter(p => p);
+      } else if (!Array.isArray(positionData)) {
+        positionData = [];
+      }
+      player.position = positionData;
+
+      // 兼容头像字段（可能是 avatar, photo, image）
+      if (!player.avatar && (player.photo || player.image)) {
+        player.avatar = player.photo || player.image;
+      }
+      console.log('处理后的位置数据:', player.position);
 
       // 计算能力值总分（使用所有能力字段）
       let total = 0;
