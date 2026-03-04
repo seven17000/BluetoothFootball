@@ -1,59 +1,114 @@
 <view class="container">
-  <form bindsubmit="submitForm">
+  <!-- 只读模式 - 查看详情 -->
+  <view wx:if="{{isReadonly}}">
     <view class="card">
-      <view class="card-title">日程信息</view>
+      <view class="card-title">赛程信息</view>
+
+      <view class="info-item">
+        <text class="info-label">对手球队</text>
+        <text class="info-value">{{formData.opponent}}</text>
+      </view>
+
+      <view class="info-item">
+        <text class="info-label">比赛日期</text>
+        <text class="info-value">{{formData.scheduleDate}}</text>
+      </view>
+
+      <view class="info-item">
+        <text class="info-label">比赛时间</text>
+        <text class="info-value">{{formData.scheduleTime}}</text>
+      </view>
+
+      <view class="info-item">
+        <text class="info-label">主客场</text>
+        <text class="info-value">{{formData.isHome ? '主场' : '客场'}}</text>
+      </view>
+
+      <view class="info-item">
+        <text class="info-label">比赛地点</text>
+        <text class="info-value">{{formData.location || '-'}}</text>
+      </view>
+
+      <view class="info-item">
+        <text class="info-label">我方球衣</text>
+        <text class="info-value">{{formData.jerseyColor || '-'}}</text>
+      </view>
+
+      <view class="info-item">
+        <text class="info-label">对方球衣</text>
+        <text class="info-value">{{formData.opponentJersey || '-'}}</text>
+      </view>
+
+      <view class="info-item">
+        <text class="info-label">备注</text>
+        <text class="info-value">{{formData.notes || '-'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 编辑模式 -->
+  <form bindsubmit="submitForm" wx:else>
+    <view class="card">
+      <view class="card-title">赛程信息</view>
 
       <view class="form-group">
-        <text class="form-label">标题 *</text>
-        <input class="form-input" name="title" value="{{formData.title}}" placeholder="请输入日程标题" bindinput="onInput" data-field="title"/>
+        <text class="form-label">对手球队 *</text>
+        <input class="form-input" placeholder-class="form-input-placeholder" placeholder-class="form-input-placeholder" name="opponent" value="{{formData.opponent}}" placeholder="请输入对手球队名称" bindinput="onInput" data-field="opponent"/>
       </view>
 
       <view class="form-group">
-        <text class="form-label">类型 *</text>
-        <picker mode="selector" range="{{eventTypes}}" range-key="label" bindchange="onTypeChange">
-          <view class="form-picker">
-            {{formData.typeLabel || '选择类型'}}
-          </view>
-        </picker>
-      </view>
-
-      <view class="form-group">
-        <text class="form-label">日期 *</text>
+        <text class="form-label">比赛日期 *</text>
         <picker mode="date" bindchange="onDateChange">
           <view class="form-picker">
-            {{formData.date || '选择日期'}}
+            {{formData.scheduleDate || '请选择日期'}}
           </view>
         </picker>
       </view>
 
       <view class="form-group">
-        <text class="form-label">时间</text>
+        <text class="form-label">比赛时间</text>
         <picker mode="time" bindchange="onTimeChange">
           <view class="form-picker">
-            {{formData.time || '选择时间'}}
+            {{formData.scheduleTime || '请选择时间'}}
           </view>
         </picker>
       </view>
 
       <view class="form-group">
-        <text class="form-label">地点</text>
-        <input class="form-input" name="location" value="{{formData.location}}" placeholder="请输入地点" bindinput="onInput" data-field="location"/>
+        <text class="form-label">主客场</text>
+        <radio-group class="radio-group" bindchange="onHomeChange">
+          <label class="radio-item">
+            <radio value="true" checked="{{formData.isHome === true}}"/>主场
+          </label>
+          <label class="radio-item">
+            <radio value="false" checked="{{formData.isHome === false}}"/>客场
+          </label>
+        </radio-group>
       </view>
 
       <view class="form-group">
-        <text class="form-label">描述</text>
-        <textarea class="form-textarea" name="description" value="{{formData.description}}" placeholder="请输入描述信息" bindinput="onInput" data-field="description"></textarea>
+        <text class="form-label">比赛地点</text>
+        <input class="form-input" placeholder-class="form-input-placeholder" name="location" value="{{formData.location}}" placeholder="请输入比赛地点" bindinput="onInput" data-field="location"/>
       </view>
 
       <view class="form-group">
-        <text class="form-label">提醒</text>
-        <switch checked="{{formData.reminder}}" bindchange="onReminderChange" color="#1989fa"/>
-        <text class="switch-label">比赛前1小时提醒</text>
+        <text class="form-label">我方球衣</text>
+        <input class="form-input" placeholder-class="form-input-placeholder" name="jerseyColor" value="{{formData.jerseyColor}}" placeholder="如：红色" bindinput="onInput" data-field="jerseyColor"/>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">对方球衣</text>
+        <input class="form-input" placeholder-class="form-input-placeholder" name="opponentJersey" value="{{formData.opponentJersey}}" placeholder="如：蓝色" bindinput="onInput" data-field="opponentJersey"/>
+      </view>
+
+      <view class="form-group">
+        <text class="form-label">备注</text>
+        <textarea class="form-textarea" placeholder-class="form-input-placeholder" name="notes" value="{{formData.notes}}" placeholder="请输入备注信息" bindinput="onInput" data-field="notes"></textarea>
       </view>
     </view>
 
     <view class="btn-container">
-      <button class="btn btn-primary btn-block" form-type="submit">{{isEdit ? '保存修改' : '添加日程'}}</button>
+      <button class="btn btn-primary btn-block" form-type="submit">{{isEdit ? '保存修改' : '添加赛程'}}</button>
     </view>
   </form>
 </view>

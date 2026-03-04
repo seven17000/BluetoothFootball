@@ -1,7 +1,6 @@
 // pages/players/players.js
 const app = getApp();
-const db = wx.cloud.database();
-const _ = db.command;
+const { playerAPI } = require('../../utils/http.js');
 
 const PAGE_SIZE = 10;
 
@@ -45,59 +44,10 @@ Page({
     }
 
     try {
-      let query = db.collection('players');
+      // 获取球员列表（由于后端暂时不支持复杂筛选，先获取全部）
+      const players = await playerAPI.getPlayers({ isActive: true });
 
-      // 关键词搜索
-      if (this.data.keyword) {
-        query = query.where({
-          name: db.RegExp({
-            regexp: this.data.keyword,
-            options: 'i'
-          })
-        });
-      }
-
-      // 位置筛选 - Cloud DB 直接用值查询数组字段是否包含该值
-      if (this.data.position) {
-        query = query.where({
-          position: this.data.position
-        });
-      }
-
-      // 搜索或筛选时重置分页
-      if (this.data.keyword || this.data.position) {
-        this.setData({ page: 1, hasMore: true });
-      }
-
-      // 如果是重置，使用 page 1；否则使用当前页码
-      const page = reset ? 1 : this.data.page;
-      const skip = (page - 1) * PAGE_SIZE;
-
-      // 获取总数 - 需要重新创建不含 orderBy 的查询
-      let countQuery = db.collection('players');
-      if (this.data.keyword) {
-        countQuery = countQuery.where({
-          name: db.RegExp({
-            regexp: this.data.keyword,
-            options: 'i'
-          })
-        });
-      }
-      if (this.data.position) {
-        countQuery = countQuery.where({
-          position: this.data.position
-        });
-      }
-      const countRes = await countQuery.count();
-      const total = countRes.total;
-
-      // 获取当前页数据
-      const res = await query.orderBy('number', 'asc')
-        .skip(skip)
-        .limit(PAGE_SIZE)
-        .get();
-
-      const newPlayers = res.data.map(player => {
+      const newPlayers = (players || []).map(player => {
         // 确保 position 是数组（兼容旧的 positions 字段）
         let positionData = player.position || player.positions || [];
         if (typeof positionData === 'string') {
@@ -106,6 +56,7 @@ Page({
           positionData = [];
         }
         player.position = positionData;
+        player._id = player._id || player.id;
 
         // 兼容头像字段
         if (!player.avatar && (player.photo || player.image)) {
@@ -113,12 +64,40 @@ Page({
         }
         return player;
       });
-      const allPlayers = reset ? newPlayers : this.data.players.concat(newPlayers);
+
+      // 关键词搜索（前端筛选）
+      let filteredPlayers = newPlayers;
+      if (this.data.keyword) {
+        const keyword = this.data.keyword.toLowerCase();
+        filteredPlayers = newPlayers.filter(p => p.name && p.name.toLowerCase().includes(keyword));
+      }
+
+      // 位置筛选（前端筛选）
+      if (this.data.position) {
+        filteredPlayers = filteredPlayers.filter(p => {
+          const positions = p.position || [];
+          return positions.includes(this.data.position);
+        });
+      }
+
+      // 按号码排序
+      filteredPlayers.sort((a, b) => {
+        const numA = parseInt(a.number) || 0;
+        const numB = parseInt(b.number) || 0;
+        return numA - numB;
+      });
+
+      // 分页
+      const page = reset ? 1 : this.data.page;
+      const skip = (page - 1) * PAGE_SIZE;
+      const pagedPlayers = filteredPlayers.slice(skip, skip + PAGE_SIZE);
+
+      const allPlayers = reset ? pagedPlayers : this.data.players.concat(pagedPlayers);
 
       this.setData({
         players: allPlayers,
-        total,
-        hasMore: allPlayers.length < total,
+        total: filteredPlayers.length,
+        hasMore: allPlayers.length < filteredPlayers.length,
         page: page + 1,
         isLoading: false,
         isLoadingMore: false

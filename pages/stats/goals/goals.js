@@ -1,7 +1,6 @@
 // pages/stats/goals/goals.js
 const app = getApp();
-const db = wx.cloud.database();
-const _ = db.command;
+const { statsAPI, matchAPI, playerAPI } = require('../../../utils/http.js');
 
 const PAGE_SIZE = 20;
 
@@ -51,27 +50,12 @@ Page({
   // 加载赛季列表
   async loadSeasons() {
     try {
-      // 获取所有有赛季数据的比赛
-      const res = await db.collection('matches')
-        .orderBy('matchDate', 'desc')
-        .limit(1)
-        .get();
+      const res = await matchAPI.getMatches({ limit: 100 });
+      const allMatches = res.data || [];
 
-      // 获取最新赛季
-      let latestSeason = '';
-      if (res.data.length > 0 && res.data[0].season) {
-        latestSeason = res.data[0].season;
-      }
-
-      // 获取所有唯一赛季用于下拉选择
-      const allRes = await db.collection('matches')
-        .where({
-          season: _.exists(true)
-        })
-        .get();
-
+      // 提取所有唯一赛季
       const seasonsMap = {};
-      allRes.data.forEach(function(m) {
+      allMatches.forEach(function(m) {
         if (m.season) {
           seasonsMap[m.season] = true;
         }
@@ -82,7 +66,7 @@ Page({
       const allSeasons = ['全部'].concat(uniqueSeasons);
 
       // 默认选择最新赛季
-      const defaultSeason = latestSeason || '全部';
+      const defaultSeason = uniqueSeasons.length > 0 ? uniqueSeasons[0] : '全部';
 
       this.setData({
         seasons: allSeasons,
@@ -104,37 +88,18 @@ Page({
     try {
       const selectedSeason = this.data.selectedSeason;
 
-      // 构建查询条件
-      let queryCondition = {
-        result: _.in(['胜', '平', '负'])
-      };
-      if (selectedSeason && selectedSeason !== '全部') {
-        queryCondition.season = selectedSeason;
-      }
+      // 获取符合条件的比赛
+      const res = await matchAPI.getMatches({ season: selectedSeason === '全部' ? '' : selectedSeason, limit: 100 });
+      const allMatches = res.data || [];
 
-      // 获取总数
-      const countRes = await db.collection('matches')
-        .where(queryCondition)
-        .count();
-      const totalMatches = countRes.total;
+      // 过滤有结果的比赛
+      const finishedMatches = allMatches.filter(m => m.result && ['胜', '平', '负'].includes(String(m.result).trim()));
 
-      // 分批获取所有比赛
-      const batchSize = 20;
-      let allMatches = [];
-      for (let i = 0; i < totalMatches; i += batchSize) {
-        const res = await db.collection('matches')
-          .where(queryCondition)
-          .skip(i)
-          .limit(batchSize)
-          .get();
-        allMatches = allMatches.concat(res.data || []);
-      }
-
-      const wins = allMatches.filter(m => String(m.result).trim() === '胜').length;
-      const draws = allMatches.filter(m => String(m.result).trim() === '平').length;
-      const losses = allMatches.filter(m => String(m.result).trim() === '负').length;
-      const goals = allMatches.reduce((sum, m) => sum + (m.goals || 0), 0);
-      const conceded = allMatches.reduce((sum, m) => sum + (m.conceded || 0), 0);
+      const wins = finishedMatches.filter(m => String(m.result).trim() === '胜').length;
+      const draws = finishedMatches.filter(m => String(m.result).trim() === '平').length;
+      const losses = finishedMatches.filter(m => String(m.result).trim() === '负').length;
+      const goals = finishedMatches.reduce((sum, m) => sum + (m.goals || 0), 0);
+      const conceded = finishedMatches.reduce((sum, m) => sum + (m.conceded || 0), 0);
 
       this.setData({
         seasonStats: { goals, conceded, wins, draws, losses }
@@ -199,111 +164,40 @@ Page({
 
     try {
       const currentTab = this.data.currentTab;
-      const selectedSeason = this.data.selectedSeason;
 
-      // 构建查询条件
-      let queryCondition = {};
-      if (selectedSeason && selectedSeason !== '全部') {
-        queryCondition.season = selectedSeason;
+      // 获取射手榜或助攻榜
+      let rankList = [];
+      if (currentTab === 'goals') {
+        const res = await statsAPI.getTopScorers(20);
+        rankList = res.data || [];
+      } else {
+        const res = await statsAPI.getTopAssists(20);
+        rankList = res.data || [];
       }
 
-      // 获取符合条件的比赛
-      const countRes = await db.collection('matches')
-        .where(queryCondition)
-        .count();
-      const totalMatches = countRes.total;
+      // 处理球员信息
+      if (rankList.length > 0) {
+        const playerIds = rankList.map(r => r.playerId);
+        const playersRes = await playerAPI.getPlayers();
+        const players = playersRes.data || [];
 
-      // 分批获取所有比赛
-      const batchSize = 20;
-      let allMatches = [];
-      for (let i = 0; i < totalMatches; i += batchSize) {
-        const matchesBatch = await db.collection('matches')
-          .where(queryCondition)
-          .skip(i)
-          .limit(batchSize)
-          .get();
-        allMatches = allMatches.concat(matchesBatch.data);
-      }
+        const playerMap = {};
+        players.forEach(p => {
+          playerMap[p._id || p.id] = p;
+        });
 
-      const matchIds = [];
-      for (let i = 0; i < allMatches.length; i++) {
-        matchIds.push(allMatches[i]._id);
-      }
-
-      if (matchIds.length === 0) {
-        this.setData({ rankList: [] });
-        wx.hideLoading();
-        return;
-      }
-
-      // 分批获取球员表现记录（_.in 最多支持20个）
-      const recordBatchSize = 20;
-      let allRecords = [];
-      for (let i = 0; i < matchIds.length; i += recordBatchSize) {
-        const batchIds = matchIds.slice(i, i + recordBatchSize);
-        const recordsRes = await db.collection('match_records')
-          .where({
-            matchId: _.in(batchIds)
-          })
-          .get();
-        allRecords = allRecords.concat(recordsRes.data || []);
-      }
-      const records = allRecords;
-
-      if (records.length === 0) {
-        this.setData({ rankList: [] });
-        wx.hideLoading();
-        return;
-      }
-
-      // 按球员ID分组计算进球和助攻
-      const playerStats = {};
-      records.forEach(r => {
-        // 处理进球统计
-        if (r.goalStats && typeof r.goalStats === 'object') {
-          Object.entries(r.goalStats).forEach(([playerId, count]) => {
-            if (!playerStats[playerId]) {
-              playerStats[playerId] = { goals: 0, assists: 0 };
-            }
-            playerStats[playerId].goals += count;
-          });
-        }
-        // 处理助攻统计
-        if (r.assistStats && typeof r.assistStats === 'object') {
-          Object.entries(r.assistStats).forEach(([playerId, count]) => {
-            if (!playerStats[playerId]) {
-              playerStats[playerId] = { goals: 0, assists: 0 };
-            }
-            playerStats[playerId].assists += count;
-          });
-        }
-      });
-
-      // 获取球员信息
-      const playerIds = Object.keys(playerStats);
-      const playersRes = await db.collection('players')
-        .where({ _id: _.in(playerIds) })
-        .get();
-
-      const playerMap = {};
-      playersRes.data.forEach(p => {
-        playerMap[p._id] = p;
-      });
-
-      // 根据当前tab计算对应的value并排序
-      const rankList = Object.entries(playerStats)
-        .map(([playerId, stats]) => {
-          const player = playerMap[playerId] || {};
+        rankList = rankList.map(item => {
+          const player = playerMap[item.playerId] || {};
           return {
-            playerId,
-            name: player.name || '未知',
-            position: player.position ? player.position.join(' / ') : '',
-            avatar: player.avatar || player.photo || player.image || '',
+            playerId: item.playerId,
+            name: player.name || item.name || '未知',
+            position: player.position ? (Array.isArray(player.position) ? player.position.join(' / ') : player.position) : '',
+            avatar: player.avatar || '',
             number: player.number || '',
-            value: currentTab === 'goals' ? stats.goals : stats.assists
+            value: item.totalGoals || item.totalAssists || 0
           };
-        })
-        .sort((a, b) => b.value - a.value);
+        });
+      }
 
       const titleMap = {
         goals: '进球榜',
@@ -329,31 +223,23 @@ Page({
 
     try {
       const page = reset ? 1 : this.data.matchPage;
-      const skip = (page - 1) * PAGE_SIZE;
       const selectedSeason = this.data.selectedSeason;
 
-      // 构建查询条件
-      let queryCondition = {};
-      if (selectedSeason && selectedSeason !== '全部') {
-        queryCondition.season = selectedSeason;
-      }
+      // 获取比赛列表
+      const res = await matchAPI.getMatches({ season: selectedSeason === '全部' ? '' : selectedSeason, limit: 100 });
+      const allMatches = res.data || [];
 
-      // 获取总数
-      const countRes = await db.collection('matches')
-        .where(queryCondition)
-        .count();
-      const total = countRes.total;
+      // 按日期降序排序
+      allMatches.sort((a, b) => {
+        return new Date(b.scheduleDate || b.matchDate) - new Date(a.scheduleDate || a.matchDate);
+      });
 
-      // 获取当前页数据
-      const res = await db.collection('matches')
-        .where(queryCondition)
-        .orderBy('matchDate', 'desc')
-        .skip(skip)
-        .limit(PAGE_SIZE)
-        .get();
+      const total = allMatches.length;
+      const skip = (page - 1) * PAGE_SIZE;
+      const pageMatches = allMatches.slice(skip, skip + PAGE_SIZE);
 
-      const matchList = res.data.map(function(m) {
-        const dateStr = m.matchDate;
+      const matchList = pageMatches.map(function(m) {
+        const dateStr = m.scheduleDate || m.matchDate;
         const date = new Date(dateStr);
         return Object.assign({}, m, {
           month: isNaN(date.getMonth()) ? '' : date.getMonth() + 1,

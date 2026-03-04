@@ -1,7 +1,6 @@
 // pages/stats/attendance/attendance.js
 const app = getApp();
-const db = wx.cloud.database();
-const _ = db.command;
+const { playerAPI, attendanceAPI, matchAPI } = require('../../../utils/http.js');
 
 Page({
   data: {
@@ -40,45 +39,44 @@ Page({
 
     try {
       const { currentSeason } = this.data;
-      const [startYear, endYear] = currentSeason.split('-');
-      const startDate = new Date(parseInt(startYear), 8, 1);
-      const endDate = new Date(parseInt(endYear) + 1, 7, 31);
 
       // 获取所有球员
-      const players = await db.collection('players')
-        .where({ isActive: true })
-        .get();
+      const playersRes = await playerAPI.getPlayers({ isActive: true });
+      const players = playersRes.data || [];
 
-      if (players.data.length === 0) {
+      if (players.length === 0) {
         this.setData({ rankList: [] });
         wx.hideLoading();
         return;
       }
 
-      // 获取该赛季的出勤记录
-      const attendance = await db.collection('attendance')
-        .where({
-          eventDate: _.gte(startDate).lte(endDate)
-        })
-        .get();
+      // 获取该赛季的比赛
+      const matchesRes = await matchAPI.getMatches({ season: currentSeason, limit: 100 });
+      const matches = matchesRes.data || [];
 
-      // 计算每个球员的出勤率
+      // 获取该赛季的出勤记录
+      const attendanceRes = await attendanceAPI.getAttendance();
+      const allAttendance = attendanceRes.data || [];
+
+      // 按球员ID分组计算出勤
       const playerAttendance = {};
-      attendance.data.forEach(record => {
-        if (!playerAttendance[record.playerId]) {
-          playerAttendance[record.playerId] = { total: 0, present: 0 };
+      allAttendance.forEach(record => {
+        const playerId = record.playerId || record._id;
+        if (!playerAttendance[playerId]) {
+          playerAttendance[playerId] = { total: 0, present: 0 };
         }
-        playerAttendance[record.playerId].total++;
-        if (record.status === '出勤') {
-          playerAttendance[record.playerId].present++;
+        playerAttendance[playerId].total++;
+        if (record.status === '参加' || record.status === '出勤') {
+          playerAttendance[playerId].present++;
         }
       });
 
-      const rankList = players.data.map(player => {
-        const stats = playerAttendance[player._id] || { total: 0, present: 0 };
+      const rankList = players.map(player => {
+        const playerId = player._id || player.id;
+        const stats = playerAttendance[playerId] || { total: 0, present: 0 };
         const rate = stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0;
         return {
-          playerId: player._id,
+          playerId: playerId,
           name: player.name,
           position: player.position,
           present: stats.present,

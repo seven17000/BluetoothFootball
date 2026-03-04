@@ -1,23 +1,41 @@
 <view class="container">
-  <!-- 球队信息概览 -->
-  <view class="card">
-    <view class="stats-bar">
-      <view class="stat-item">
-        <text class="stat-value">{{teamDays}}</text>
-        <text class="stat-label">球队成立天数</text>
+  <!-- 球队信息头部（轮播背景+信息覆盖层） -->
+  <view class="team-header">
+    <!-- 球队照片轮播 -->
+    <swiper class="team-swiper" indicator-dots="true" autoplay="true" interval="4000" duration="500" circular="true" indicator-active-color="#1989fa">
+      <swiper-item wx:for="{{teamPhotos}}" wx:key="index">
+        <view class="swiper-image-wrapper" bindtap="previewPhoto" data-url="{{item}}">
+          <image src="{{item}}" mode="aspectFill" class="swiper-bg-image"></image>
+        </view>
+      </swiper-item>
+      <swiper-item wx:if="{{teamPhotos.length === 0}}">
+        <view class="swiper-placeholder-bg">
+          <text class="placeholder-icon">⚽</text>
+          <text class="placeholder-text">添加球队照片</text>
+        </view>
+      </swiper-item>
+    </swiper>
+
+    <!-- 球队信息覆盖层 -->
+    <view class="team-info-overlay">
+      <view class="team-logo-wrapper" bindtap="previewLogo">
+        <image class="team-logo-img" src="/images/team-logo.png" mode="aspectFit"></image>
       </view>
-      <view class="stat-divider"></view>
-      <image class="team-logo" src="/images/team-logo.png" mode="aspectFit"></image>
-      <view class="stat-divider"></view>
-      <view class="stat-item">
-        <text class="stat-value">{{playerCount}}</text>
-        <text class="stat-label">球员数量</text>
+      <view class="team-details">
+        <text class="team-name" bindtap="goToTeamInfo">蓝牙足球队</text>
+        <text class="team-meta">成立 {{teamDays}} 天 · {{playerCount}} 名球员</text>
       </view>
     </view>
-    <view class="card-header" style="margin-top: 20rpx; justify-content: center;">
-      <text class="title">赛季最新数据</text>
+    <!-- 管理员上传按钮 -->
+    <view class="upload-btn" bindtap="uploadTeamPhoto" wx:if="{{isAdmin}}">
+      <text class="upload-icon">+</text>
     </view>
-    <view class="season-stats">
+  </view>
+
+  <!-- 赛季数据卡片 -->
+  <view class="season-card">
+    <text class="season-title">赛季最新数据</text>
+    <view class="season-stats-row">
       <view class="season-stat-item">
         <text class="season-stat-value">{{seasonStats.goals}}</text>
         <text class="season-stat-label">进球</text>
@@ -54,34 +72,32 @@
     </view>
   </view>
 
-  <!-- 赛程信息 -->
-  <view class="card">
-    <view class="card-header">
-      <text class="title">赛程信息</text>
-      <view class="more" bindtap="goToSchedule">查看更多 ></view>
-    </view>
-    <view class="schedule-list" wx:if="{{upcomingSchedules.length > 0}}">
-      <view class="schedule-item" wx:for="{{upcomingSchedules}}" wx:key="_id" bindtap="goToScheduleDetail" data-id="{{item._id}}">
-        <view class="schedule-row-1">
-          <view class="schedule-team">蓝牙</view>
-          <view class="schedule-time-capsule">{{item.time}}</view>
-          <view class="schedule-opponent">{{item.opponent}}</view>
-        </view>
-        <view class="schedule-row-2">
-          <view class="schedule-jersey-left" wx:if="{{item.jerseyColor}}">球衣：{{item.jerseyColor}}</view>
-          <view class="schedule-datetime">
-            <text>{{item.month}}月{{item.day}}日</text>
-            <text wx:if="{{item.location}}">{{item.location}}</text>
+  <!-- 赛程信息（有赛程时显示在最近比赛上面） -->
+  <block wx:if="{{upcomingSchedules.length > 0}}">
+    <view class="card">
+      <view class="card-header">
+        <text class="title">赛程信息</text>
+        <view class="more" bindtap="goToSchedule">查看更多 ></view>
+      </view>
+      <view class="schedule-list">
+        <view class="schedule-item" wx:for="{{upcomingSchedules}}" wx:key="_id" bindtap="goToScheduleDetail" data-id="{{item._id}}">
+          <view class="schedule-row-1">
+            <view class="schedule-team">蓝牙</view>
+            <view class="schedule-time-capsule">{{item.time}}</view>
+            <view class="schedule-opponent">{{item.opponent}}</view>
           </view>
-          <view class="schedule-jersey-right" wx:if="{{item.opponentJersey}}">球衣：{{item.opponentJersey}}</view>
+          <view class="schedule-row-2">
+            <view class="schedule-jersey-left" wx:if="{{item.jerseyColor}}">球衣：{{item.jerseyColor}}</view>
+            <view class="schedule-datetime">
+              <text>{{item.month}}月{{item.day}}日</text>
+              <text wx:if="{{item.location}}">{{item.location}}</text>
+            </view>
+            <view class="schedule-jersey-right" wx:if="{{item.opponentJersey}}">球衣：{{item.opponentJersey}}</view>
+          </view>
         </view>
       </view>
     </view>
-    <view class="empty-state" wx:else>
-      <text>暂无赛程信息</text>
-      <button class="btn btn-primary mt-20" bindtap="addSchedule" wx:if="{{isAdmin}}">添加赛程</button>
-    </view>
-  </view>
+  </block>
 
   <!-- 最近比赛 -->
   <view class="card">
@@ -92,23 +108,23 @@
     <view class="match-list" wx:if="{{recentMatches.length > 0}}">
       <view class="match-item" wx:for="{{recentMatches}}" wx:key="_id" bindtap="goToMatchDetail" data-id="{{item._id}}">
         <view class="match-row-1">
-          <view class="match-team">蓝牙</view>
+          <text class="match-team">蓝牙</text>
           <view class="match-result-capsule {{item.resultClass}}">{{item.goals}}-{{item.conceded}} {{item.result}}</view>
-          <view class="match-opponent">{{item.opponent}}</view>
+          <text class="match-opponent">{{item.opponent}}</text>
         </view>
         <view class="match-row-2">
-          <view class="match-jersey-left" wx:if="{{item.jerseyColor}}">球衣：{{item.jerseyColor}}</view>
+          <text class="match-jersey-left" wx:if="{{item.jerseyColor}}">球衣：{{item.jerseyColor}}</text>
           <view class="match-datetime">
             <text>{{item.month}}月{{item.day}}日</text>
             <text>{{item.isHome ? '主场' : '客场'}}</text>
             <text wx:if="{{item.location}}">{{item.location}}</text>
           </view>
-          <view class="match-jersey-right" wx:if="{{item.opponentJersey}}">球衣：{{item.opponentJersey}}</view>
+          <text class="match-jersey-right" wx:if="{{item.opponentJersey}}">球衣：{{item.opponentJersey}}</text>
         </view>
       </view>
     </view>
-    <view class="empty-state" wx:else>
-      <text>暂无比赛记录</text>
+    <view class="empty-state-center" wx:else>
+      <text class="empty-text">暂无比赛记录</text>
       <button class="btn btn-primary mt-20" bindtap="addMatch" wx:if="{{isAdmin}}">添加比赛</button>
     </view>
   </view>
@@ -153,6 +169,17 @@
           </view>
         </view>
       </view>
+    </view>
+  </view>
+
+  <!-- 赛程信息（无赛程时显示在底部） -->
+  <view class="card" wx:if="{{upcomingSchedules.length === 0}}">
+    <view class="card-header">
+      <text class="title">赛程信息</text>
+    </view>
+    <view class="empty-state-center">
+      <text class="empty-text">暂无赛程信息</text>
+      <button class="btn btn-primary mt-20" bindtap="addSchedule" wx:if="{{isAdmin}}">添加赛程</button>
     </view>
   </view>
 </view>

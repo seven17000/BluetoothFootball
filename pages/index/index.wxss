@@ -3,75 +3,191 @@ page {
 }
 
 .container {
-  padding: 20rpx;
+  padding: 0;
 }
 
-/* 简洁统计栏 */
-.stats-bar {
+/* 球队信息头部容器 */
+.team-header {
+  position: relative;
+  width: 100%;
+  height: 340rpx;
+  overflow: hidden;
+}
+
+/* 球队照片轮播 */
+.team-swiper {
+  width: 100%;
+  height: 100%;
+}
+
+/* 轮播占位图 */
+.swiper-placeholder-bg {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #1989fa 0%, #1067c7 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.swiper-placeholder-bg .placeholder-icon {
+  font-size: 60rpx;
+  margin-bottom: 12rpx;
+}
+
+.swiper-placeholder-bg .placeholder-text {
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.swiper-bg-image {
+  width: 100%;
+  height: 100%;
+}
+
+.swiper-image-wrapper {
+  width: 100%;
+  height: 100%;
+}
+
+/* 球队信息覆盖层 */
+.team-info-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 10;
+}
+
+.team-logo-wrapper {
+  width: 120rpx;
+  height: 120rpx;
+  background-color: #fff;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  box-shadow: 0 6rpx 24rpx rgba(0, 0, 0, 0.3);
+  border: 6rpx solid #fff;
+}
+
+.team-logo-img {
+  width: 90rpx;
+  height: 90rpx;
+}
+
+.team-details {
+  margin-top: 12rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 8rpx 24rpx;
+  border-radius: 24rpx;
+}
+
+.team-name {
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #fff;
+}
+
+.team-meta {
+  font-size: 20rpx;
+  color: rgba(255, 255, 255, 0.85);
+  margin-top: 8rpx;
+}
+
+/* 管理员上传按钮 */
+.upload-btn {
+  position: absolute;
+  top: 16rpx;
+  right: 16rpx;
+  z-index: 20;
+  width: 56rpx;
+  height: 56rpx;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.25);
+}
+
+.upload-icon {
+  font-size: 32rpx;
+  color: #1989fa;
+  font-weight: 600;
+}
+
+/* 轮播项样式 */
+.swiper-item {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.add-photo-item {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(25, 137, 250, 0.9) 0%, rgba(16, 103, 199, 0.9) 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2rpx dashed rgba(255, 255, 255, 0.6);
+  box-sizing: border-box;
+}
+
+.add-photo-icon {
+  font-size: 80rpx;
+  color: #fff;
+  font-weight: 300;
+  margin-bottom: 16rpx;
+}
+
+.add-photo-text {
+  font-size: 26rpx;
+  color: #fff;
+}
+
+/* 赛季数据卡片 */
+.season-card {
+  background-color: #fff;
+  border-radius: 24rpx;
   padding: 30rpx;
-  margin-bottom: 20rpx;
+  margin: 20rpx 20rpx 20rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.08);
 }
 
-.stat-item {
-  text-align: center;
-  flex: 1;
-}
-
-.stat-divider {
-  width: 1rpx;
-  height: 60rpx;
-  background: rgba(255, 255, 255, 0.3);
-  margin: 0 20rpx;
-}
-
-.team-logo {
-  width: 120rpx;
-  height: 120rpx;
-}
-
-.stats-bar .stat-value {
-  font-size: 48rpx;
-  font-weight: bold;
-  display: block;
-  margin-bottom: 8rpx;
+.season-title {
+  font-size: 28rpx;
+  font-weight: 600;
   color: #333;
 }
 
-.stats-bar .stat-label {
-  font-size: 24rpx;
-  color: #999;
-}
-
-/* 本赛季数据 */
-.season-stats {
+.season-stats-row {
   display: flex;
-  justify-content: space-around;
-  background-color: #fff;
-  border-radius: 16rpx;
-  padding: 24rpx 30rpx;
-  margin-bottom: 20rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.08);
+  justify-content: space-between;
+  margin-top: 24rpx;
 }
 
 .season-stat-item {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   flex: 1;
 }
 
 .season-stat-value {
-  display: block;
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #333;
-  margin-bottom: 8rpx;
-}
-
-.season-stat-label {
-  font-size: 22rpx;
-  color: #999;
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #1989fa;
 }
 
 .season-stat-item.win .season-stat-value {
@@ -83,49 +199,22 @@ page {
 }
 
 .season-stat-item.loss .season-stat-value {
-  color: #fa5151;
+  color: #666;
 }
 
-/* 统计网格 */
-.stats-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  margin-bottom: 20rpx;
-}
-
-.stats-grid .stat-item {
-  width: calc(50% - 10rpx);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 16rpx;
-  padding: 30rpx;
-  margin-bottom: 20rpx;
-  box-sizing: border-box;
-  color: #fff;
-}
-
-.stats-grid .stat-item:nth-child(3),
-.stats-grid .stat-item:nth-child(4) {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-}
-
-.stats-grid .stat-value {
-  font-size: 48rpx;
-  font-weight: bold;
-  margin-bottom: 10rpx;
-}
-
-.stats-grid .stat-label {
-  font-size: 24rpx;
-  opacity: 0.9;
+.season-stat-label {
+  font-size: 22rpx;
+  color: #999;
+  margin-top: 4rpx;
 }
 
 /* 卡片样式 */
 .card {
   background-color: #fff;
-  border-radius: 16rpx;
+  border-radius: 24rpx;
   padding: 30rpx;
-  margin-bottom: 20rpx;
+  margin: 0 20rpx 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
 }
 
 .card-header {
@@ -136,8 +225,8 @@ page {
 }
 
 .card-header .title {
-  font-size: 32rpx;
-  font-weight: bold;
+  font-size: 30rpx;
+  font-weight: 600;
   color: #333;
 }
 
@@ -146,108 +235,15 @@ page {
   color: #999;
 }
 
-/* 比赛列表 */
-.match-list {
-  margin: 0 -20rpx;
-  padding: 0 20rpx;
-}
-
-.match-item {
-  padding: 16rpx 0;
-  border-bottom: 1rpx solid #f0f0f0;
-}
-
-.match-item:last-child {
-  border-bottom: none;
-}
-
-.match-row-1 {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8rpx;
-}
-
-.match-team {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #1989fa;
-  flex: 1;
-}
-
-.match-result-capsule {
-  font-size: 24rpx;
-  font-weight: bold;
-  color: #fff;
-  padding: 6rpx 16rpx;
-  border-radius: 20rpx;
-  flex: 1;
-  text-align: center;
-}
-
-.match-result-capsule.win {
-  background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
-}
-
-.match-result-capsule.draw {
-  background: linear-gradient(135deg, #faad14 0%, #d48806 100%);
-}
-
-.match-result-capsule.loss {
-  background: linear-gradient(135deg, #fa5151 0%, #cf1322 100%);
-}
-
-.match-opponent {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #1989fa;
-  flex: 1;
-  text-align: right;
-}
-
-.match-row-2 {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.match-jersey-left {
-  font-size: 22rpx;
-  color: #999;
-  flex: 1;
-}
-
-.match-datetime {
-  font-size: 24rpx;
-  color: #666;
-  flex: 1;
-  text-align: center;
-}
-
-.match-datetime text {
-  display: inline-block;
-  margin-right: 16rpx;
-}
-
-.match-datetime text:last-child {
-  margin-right: 0;
-}
-
-.match-jersey-right {
-  font-size: 22rpx;
-  color: #999;
-  flex: 1;
-  text-align: right;
-}
-
 /* 赛程列表 */
 .schedule-list {
-  margin: 0 -20rpx;
-  padding: 0 20rpx;
+  margin: 0 -10rpx;
 }
 
 .schedule-item {
-  padding: 16rpx 0;
+  display: flex;
+  flex-direction: column;
+  padding: 20rpx 10rpx;
   border-bottom: 1rpx solid #f0f0f0;
 }
 
@@ -323,115 +319,122 @@ page {
   text-align: right;
 }
 
-/* 射手榜 */
-.top-scorer-list {
-  margin: 0 -20rpx;
-  padding: 0 20rpx;
+/* 比赛列表 */
+.match-list {
+  margin: 0 -10rpx;
 }
 
-.scorer-item {
-  display: flex;
-  align-items: center;
+.match-item {
   padding: 16rpx 0;
   border-bottom: 1rpx solid #f0f0f0;
 }
 
-.scorer-item:last-child {
+.match-item:last-child {
   border-bottom: none;
 }
 
-.rank {
-  width: 48rpx;
-  height: 48rpx;
-  line-height: 48rpx;
-  text-align: center;
-  border-radius: 50%;
-  background-color: #f0f0f0;
-  font-size: 24rpx;
-  font-weight: bold;
-  margin-right: 16rpx;
+.match-row-1 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8rpx;
 }
 
-.rank-1 {
-  background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
-  color: #fff;
-}
-
-.rank-2 {
-  background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);
-  color: #fff;
-}
-
-.rank-3 {
-  background: linear-gradient(135deg, #cd7f32 0%, #b87333 100%);
-  color: #fff;
-}
-
-.player-info {
+.match-team {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1989fa;
   flex: 1;
 }
 
-.player-name {
-  display: block;
-  font-size: 28rpx;
-  color: #333;
-  margin-bottom: 4rpx;
-}
-
-.player-team {
-  font-size: 22rpx;
-  color: #999;
-}
-
-.goal-count {
-  display: flex;
-  align-items: baseline;
-}
-
-.goals {
-  font-size: 36rpx;
-  font-weight: bold;
-  color: #1989fa;
-}
-
-.goals-label {
-  font-size: 22rpx;
-  color: #999;
-  margin-left: 4rpx;
-}
-
-/* 快捷入口 */
-.quick-entry {
-  display: flex;
-  justify-content: space-between;
-  background-color: #fff;
-  border-radius: 16rpx;
-  padding: 30rpx;
-  margin-bottom: 20rpx;
-}
-
-.entry-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.entry-item image {
-  width: 64rpx;
-  height: 64rpx;
-  margin-bottom: 10rpx;
-}
-
-.entry-item text {
+.match-result-capsule {
   font-size: 24rpx;
+  font-weight: 600;
+  color: #fff;
+  padding: 8rpx 20rpx;
+  border-radius: 20rpx;
+  flex: 1;
+  text-align: center;
+}
+
+.match-result-capsule.win {
+  background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+}
+
+.match-result-capsule.draw {
+  background: linear-gradient(135deg, #faad14 0%, #d48806 100%);
+}
+
+.match-result-capsule.loss {
+  background: linear-gradient(135deg, #fa5151 0%, #cf1322 100%);
+}
+
+.match-opponent {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1989fa;
+  flex: 1;
+  text-align: right;
+}
+
+.match-row-2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.match-jersey-left {
+  font-size: 22rpx;
+  color: #999;
+  flex: 1;
+}
+
+.match-datetime {
+  font-size: 22rpx;
   color: #666;
+  flex: 1;
+  text-align: center;
+}
+
+.match-datetime text {
+  display: inline-block;
+  margin-right: 12rpx;
+}
+
+.match-datetime text:last-child {
+  margin-right: 0;
+}
+
+.match-jersey-right {
+  font-size: 22rpx;
+  color: #999;
+  flex: 1;
+  text-align: right;
 }
 
 /* 空状态 */
 .empty-state {
   text-align: center;
   padding: 40rpx 0;
+}
+
+.empty-state-sm {
+  text-align: center;
+  padding: 30rpx 0;
   color: #999;
+}
+
+.empty-state-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30rpx 0;
+}
+
+.empty-state-center .empty-text {
+  color: #999;
+  font-size: 28rpx;
+  margin-bottom: 20rpx;
 }
 
 .empty-title {
@@ -454,7 +457,6 @@ page {
   background-color: #f5f7fa;
   border-radius: 12rpx;
   padding: 24rpx 30rpx;
-  margin-top: 20rpx;
 }
 
 .empty-steps text {
@@ -468,12 +470,17 @@ page {
 .stats-row {
   display: flex;
   gap: 20rpx;
+  padding: 0 20rpx;
+  margin-bottom: 20rpx;
 }
 
 .stats-card {
   flex: 1;
-  margin-bottom: 0;
+  background-color: #fff;
+  border-radius: 24rpx;
   padding: 24rpx;
+  margin: 0;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
 }
 
 .stats-card .card-header {
@@ -481,7 +488,7 @@ page {
 }
 
 .stats-card .title {
-  font-size: 28rpx;
+  font-size: 26rpx;
 }
 
 .stats-card .more {
@@ -489,18 +496,17 @@ page {
 }
 
 .stats-card .top-scorer-list {
-  margin: 0 -12rpx;
-  padding: 0 12rpx;
+  margin: 0 -8rpx;
 }
 
 .stats-card .scorer-item {
-  padding: 12rpx 0;
+  padding: 12rpx 8rpx;
 }
 
 .stats-card .rank {
-  width: 40rpx;
-  height: 40rpx;
-  line-height: 40rpx;
+  width: 36rpx;
+  height: 36rpx;
+  line-height: 36rpx;
   font-size: 22rpx;
   margin-right: 12rpx;
 }
@@ -510,5 +516,73 @@ page {
 }
 
 .stats-card .goals {
+  font-size: 28rpx;
+}
+
+/* 射手榜 */
+.top-scorer-list {
+  margin: 0 -10rpx;
+}
+
+.scorer-item {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 10rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.scorer-item:last-child {
+  border-bottom: none;
+}
+
+.rank {
+  width: 40rpx;
+  height: 40rpx;
+  line-height: 40rpx;
+  text-align: center;
+  border-radius: 50%;
+  background-color: #f0f0f0;
+  font-size: 24rpx;
+  font-weight: bold;
+  margin-right: 16rpx;
+  color: #fff;
+}
+
+.rank-1 {
+  background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
+}
+
+.rank-2 {
+  background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);
+}
+
+.rank-3 {
+  background: linear-gradient(135deg, #cd7f32 0%, #b87333 100%);
+}
+
+.player-info {
+  flex: 1;
+}
+
+.player-name {
+  display: block;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.goal-count {
+  display: flex;
+  align-items: baseline;
+}
+
+.goals {
   font-size: 32rpx;
+  font-weight: bold;
+  color: #1989fa;
+}
+
+.goals-label {
+  font-size: 22rpx;
+  color: #999;
+  margin-left: 4rpx;
 }

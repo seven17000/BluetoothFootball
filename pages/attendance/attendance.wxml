@@ -56,7 +56,7 @@
 
       <view class="form-group" wx:if="{{formData.status === '请假'}}">
         <text class="form-label">请假原因</text>
-        <input class="form-input" placeholder="请输入请假原因" value="{{formData.reason}}" bindinput="onReasonInput"/>
+        <input class="form-input" placeholder-class="form-input-placeholder" placeholder="请输入请假原因" value="{{formData.reason}}" bindinput="onReasonInput"/>
       </view>
 
       <button class="btn btn-primary btn-block" form-type="submit">添加记录</button>

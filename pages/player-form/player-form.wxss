@@ -83,7 +83,9 @@ page {
   border: 1rpx solid #e5e5e5;
   border-radius: 8rpx;
   font-size: 28rpx;
+  color: #333;
   box-sizing: border-box;
+  line-height: 1.5;
 }
 
 .form-picker {
@@ -302,6 +304,7 @@ page {
   padding: 20rpx;
   background-color: #fff;
   box-shadow: 0 -2rpx 10rpx rgba(0, 0, 0, 0.05);
+  text-align: center;
 }
 
 .btn-block {

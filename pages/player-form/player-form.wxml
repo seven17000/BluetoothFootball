@@ -9,11 +9,11 @@
       <view class="name-number-row">
         <view class="form-group name-number-item">
           <text class="form-label"><text class="required-mark">*</text>球员姓名</text>
-          <input class="form-input" name="name" value="{{formData.name}}" placeholder="请输入真实姓名" bindinput="onInput" data-field="name"/>
+          <input class="form-input" placeholder-class="form-input-placeholder" name="name" value="{{formData.name}}" placeholder="请输入真实姓名" bindinput="onInput" data-field="name"/>
         </view>
         <view class="form-group name-number-item">
           <text class="form-label"><text class="required-mark">*</text>球衣号码</text>
-          <input class="form-input" type="number" name="number" value="{{formData.number}}" placeholder="1-99号" maxlength="2" bindinput="onInput" data-field="number"/>
+          <input class="form-input" placeholder-class="form-input-placeholder" type="number" name="number" value="{{formData.number}}" placeholder="1-99号" maxlength="2" bindinput="onInput" data-field="number"/>
         </view>
       </view>
 
@@ -142,7 +142,7 @@
 <view class="dialog" wx:if="{{showDialog}}">
   <view class="dialog-title">添加自定义标签</view>
   <view class="dialog-content">
-    <input class="dialog-input" placeholder="请输入标签名称" maxlength="10" bindinput="onTagInput" value="{{newTagName}}"/>
+    <input class="dialog-input" placeholder-class="form-input-placeholder" placeholder="请输入标签名称" maxlength="10" bindinput="onTagInput" value="{{newTagName}}"/>
   </view>
   <view class="dialog-actions">
     <view class="dialog-btn cancel" bindtap="hideDialog">取消</view>

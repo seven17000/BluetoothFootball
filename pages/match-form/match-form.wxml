@@ -5,73 +5,80 @@
     <view class="card">
       <view class="card-title">比赛信息</view>
 
-      <view class="form-group">
-        <text class="form-label">对手球队 *</text>
-        <input class="form-input" name="opponent" value="{{formData.opponent}}" placeholder="请输入对手球队名称" bindinput="onInput" data-field="opponent"/>
+      <!-- 对手和地点并排 -->
+      <view class="opponent-location-row">
+        <view class="form-group opponent-location-item">
+          <text class="form-label"><text class="required-mark">*</text>对手球队</text>
+          <input class="form-input" placeholder-class="form-input-placeholder" name="opponent" value="{{formData.opponent}}" placeholder="请输入对手球队名称" bindinput="onInput" data-field="opponent"/>
+        </view>
+        <view class="form-group opponent-location-item">
+          <text class="form-label">比赛地点</text>
+          <input class="form-input" placeholder-class="form-input-placeholder" name="location" value="{{formData.location}}" placeholder="请输入比赛地点" bindinput="onInput" data-field="location"/>
+        </view>
       </view>
 
-      <view class="form-group">
-        <text class="form-label">比赛日期 *</text>
-        <picker mode="date" bindchange="onDateChange">
-          <view class="form-picker">
-            {{formData.matchDate || '请选择日期'}}
-          </view>
-        </picker>
+      <!-- 赛季和日期并排 -->
+      <view class="season-date-row">
+        <view class="form-group season-date-item">
+          <text class="form-label"><text class="required-mark">*</text>赛季</text>
+          <picker mode="selector" range="{{seasons}}" bindchange="onSeasonChange">
+            <view class="form-picker">
+              {{formData.season || '请选择赛季'}}
+            </view>
+          </picker>
+        </view>
+        <view class="form-group season-date-item">
+          <text class="form-label"><text class="required-mark">*</text>比赛日期</text>
+          <picker mode="date" bindchange="onDateChange">
+            <view class="form-picker">
+              {{formData.matchDate || '请选择日期'}}
+            </view>
+          </picker>
+        </view>
       </view>
 
-      <view class="form-group">
-        <text class="form-label">比赛时间</text>
-        <picker mode="time" bindchange="onTimeChange">
-          <view class="form-picker">
-            {{formData.matchTime || '请选择时间'}}
-          </view>
-        </picker>
+      <!-- 主客场和时间并排 -->
+      <view class="home-time-row">
+        <view class="form-group home-time-item">
+          <text class="form-label"><text class="required-mark">*</text>主客场</text>
+          <picker mode="selector" range="{{['主场', '客场']}}" bindchange="onHomeChange">
+            <view class="form-picker">
+              {{formData.isHome === true ? '主场' : (formData.isHome === false ? '客场' : '请选择')}}
+            </view>
+          </picker>
+        </view>
+        <view class="form-group home-time-item">
+          <text class="form-label">比赛时间</text>
+          <picker mode="time" bindchange="onTimeChange">
+            <view class="form-picker">
+              {{formData.matchTime || '请选择时间'}}
+            </view>
+          </picker>
+        </view>
       </view>
 
-      <view class="form-group">
-        <text class="form-label">主客场 *</text>
-        <radio-group class="radio-group" bindchange="onHomeChange">
-          <label class="radio-item">
-            <radio value="true" checked="{{formData.isHome === true}}"/>主场
-          </label>
-          <label class="radio-item">
-            <radio value="false" checked="{{formData.isHome === false}}"/>客场
-          </label>
-        </radio-group>
-      </view>
-
-      <view class="form-group">
-        <text class="form-label">比赛地点</text>
-        <input class="form-input" name="location" value="{{formData.location}}" placeholder="请输入比赛地点" bindinput="onInput" data-field="location"/>
-      </view>
-
-      <view class="form-group">
-        <text class="form-label">我方进球 *</text>
-        <input class="form-input" type="number" name="goals" value="{{formData.goals}}" placeholder="请输入进球数" bindinput="onInput" data-field="goals"/>
-      </view>
-
-      <view class="form-group">
-        <text class="form-label">对方进球 *</text>
-        <input class="form-input" type="number" name="conceded" value="{{formData.conceded}}" placeholder="请输入失球数" bindinput="onInput" data-field="conceded"/>
-      </view>
-
-      <view class="form-group">
-        <text class="form-label">比赛结果</text>
-        <view class="result-display">
-          <text class="result-tag {{resultClass}}">{{resultText}}</text>
+      <!-- 进球数并排 -->
+      <view class="goals-row">
+        <view class="form-group goals-item">
+          <text class="form-label"><text class="required-mark">*</text>我方进球</text>
+          <input class="form-input" placeholder-class="form-input-placeholder" type="number" name="goals" value="{{formData.goals}}" placeholder="进球数" bindinput="onInput" data-field="goals"/>
+        </view>
+        <view class="form-group goals-item">
+          <text class="form-label"><text class="required-mark">*</text>对方进球</text>
+          <input class="form-input" placeholder-class="form-input-placeholder" type="number" name="conceded" value="{{formData.conceded}}" placeholder="失球数" bindinput="onInput" data-field="conceded"/>
         </view>
       </view>
 
       <view class="form-group">
         <text class="form-label">备注</text>
-        <textarea class="form-textarea" name="notes" value="{{formData.notes}}" placeholder="请输入备注信息" bindinput="onInput" data-field="notes"></textarea>
+        <textarea class="form-textarea" placeholder-class="form-input-placeholder" name="notes" value="{{formData.notes}}" placeholder="请输入备注信息" bindinput="onInput" data-field="notes"></textarea>
       </view>
     </view>
 
     <!-- 出勤球员 -->
     <view class="card">
       <view class="card-title">
-        <text>出勤球员 *</text>
+        <text><text class="required-mark">*</text>出勤球员</text>
         <text class="attendance-count">已选 {{attendancePlayers.length}} 人</text>
       </view>
       <view class="quick-actions">
@@ -89,78 +96,78 @@
       </checkbox-group>
     </view>
 
-    <!-- 进球记录 -->
+    <!-- 进球和助攻记录合并 -->
     <view class="card">
       <view class="card-title">
-        <text>进球记录</text>
-        <text class="stat-total">共 {{totalGoals}} 球</text>
+        <text>球员表现</text>
+        <text class="stat-total">进球 {{totalGoals}} / 助攻 {{totalAssists}}</text>
       </view>
 
       <!-- 添加进球 -->
       <view class="add-record-row">
         <picker class="player-picker" mode="selector" range="{{players}}" range-key="name" bindchange="onGoalPlayerChange">
           <view class="picker-content">
-            {{selectedGoalPlayerName || '选择球员'}}
+            {{selectedGoalPlayerName || '选择进球球员'}}
           </view>
         </picker>
-        <view class="add-btn" bindtap="addGoalRecord">+ 添加</view>
-      </view>
-
-      <!-- 进球列表 -->
-      <view class="record-list" wx:if="{{goalRecords.length}}">
-        <view class="record-item" wx:for="{{goalRecords}}" wx:key="playerId">
-          <view class="record-player">
-            <text class="record-number">{{item.playerNumber}}号</text>
-            <text class="record-name">{{item.playerName}}</text>
-          </view>
-          <view class="record-count">
-            <view class="count-btn" bindtap="decreaseGoal" data-playerid="{{item.playerId}}">-</view>
-            <text class="count-num">{{item.count}}</text>
-            <view class="count-btn" bindtap="increaseGoal" data-playerid="{{item.playerId}}">+</view>
-          </view>
-          <view class="remove-btn" bindtap="removeGoalRecord" data-playerid="{{item.playerId}}">删除</view>
-        </view>
-      </view>
-      <view class="empty-record" wx:else>
-        <text>暂无进球记录</text>
-      </view>
-    </view>
-
-    <!-- 助攻记录 -->
-    <view class="card">
-      <view class="card-title">
-        <text>助攻记录</text>
-        <text class="stat-total">共 {{totalAssists}} 助攻</text>
+        <view class="add-btn" bindtap="addGoalRecord">+ 进球</view>
       </view>
 
       <!-- 添加助攻 -->
       <view class="add-record-row">
         <picker class="player-picker" mode="selector" range="{{players}}" range-key="name" bindchange="onAssistPlayerChange">
           <view class="picker-content">
-            {{selectedAssistPlayerName || '选择球员'}}
+            {{selectedAssistPlayerName || '选择助攻球员'}}
           </view>
         </picker>
-        <view class="add-btn" bindtap="addAssistRecord">+ 添加</view>
+        <view class="add-btn" bindtap="addAssistRecord">+ 助攻</view>
+      </view>
+
+      <!-- 进球列表 -->
+      <view class="record-section" wx:if="{{goalRecords.length > 0}}">
+        <view class="record-label">进球</view>
+        <view class="record-list">
+          <view class="record-item" wx:for="{{goalRecords}}" wx:key="playerId">
+            <view class="record-player">
+              <text class="record-number">{{item.playerNumber}}号</text>
+              <text class="record-name">{{item.playerName}}</text>
+            </view>
+            <view class="record-count">
+              <view class="count-btn" bindtap="decreaseGoal" data-playerid="{{item.playerId}}">-</view>
+              <text class="count-num">{{item.count}}</text>
+              <view class="count-btn" bindtap="increaseGoal" data-playerid="{{item.playerId}}">+</view>
+            </view>
+            <view class="remove-btn" bindtap="removeGoalRecord" data-playerid="{{item.playerId}}">删除</view>
+          </view>
+        </view>
       </view>
 
       <!-- 助攻列表 -->
-      <view class="record-list" wx:if="{{assistRecords.length}}">
-        <view class="record-item" wx:for="{{assistRecords}}" wx:key="playerId">
-          <view class="record-player">
-            <text class="record-number">{{item.playerNumber}}号</text>
-            <text class="record-name">{{item.playerName}}</text>
+      <view class="record-section" wx:if="{{assistRecords.length > 0}}">
+        <view class="record-label">助攻</view>
+        <view class="record-list">
+          <view class="record-item" wx:for="{{assistRecords}}" wx:key="playerId">
+            <view class="record-player">
+              <text class="record-number">{{item.playerNumber}}号</text>
+              <text class="record-name">{{item.playerName}}</text>
+            </view>
+            <view class="record-count">
+              <view class="count-btn" bindtap="decreaseAssist" data-playerid="{{item.playerId}}">-</view>
+              <text class="count-num">{{item.count}}</text>
+              <view class="count-btn" bindtap="increaseAssist" data-playerid="{{item.playerId}}">+</view>
+            </view>
+            <view class="remove-btn" bindtap="removeAssistRecord" data-playerid="{{item.playerId}}">删除</view>
           </view>
-          <view class="record-count">
-            <view class="count-btn" bindtap="decreaseAssist" data-playerid="{{item.playerId}}">-</view>
-            <text class="count-num">{{item.count}}</text>
-            <view class="count-btn" bindtap="increaseAssist" data-playerid="{{item.playerId}}">+</view>
-          </view>
-          <view class="remove-btn" bindtap="removeAssistRecord" data-playerid="{{item.playerId}}">删除</view>
         </view>
       </view>
-      <view class="empty-record" wx:else>
-        <text>暂无助攻记录</text>
+
+      <view class="empty-record" wx:if="{{!goalRecords.length && !assistRecords.length}}">
+        <text>暂无进球/助攻记录</text>
       </view>
+    </view>
+
+    <view class="form-tip">
+      <text class="required-mark">*</text> 为必填项
     </view>
 
     <view class="btn-container">

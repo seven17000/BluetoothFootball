@@ -1,7 +1,6 @@
 // pages/player-detail/player-detail.js
 const app = getApp();
-const db = wx.cloud.database();
-const _ = db.command;
+const { playerAPI, matchAPI, matchRecordAPI, attendanceAPI } = require('../../utils/http.js');
 const { ABILITY_CONFIG, FORM_ABILITY_CONFIG } = require('../../utils/constants.js');
 
 Page({
@@ -45,11 +44,9 @@ Page({
     wx.showLoading({ title: '加载中...' });
 
     try {
-      const playerRes = await db.collection('players').doc(this.data.playerId).get();
-      const player = playerRes.data;
+      const playerRes = await playerAPI.getPlayer(this.data.playerId);
+      const player = playerRes;
       console.log('球员数据:', player);
-      console.log('球员头像:', player.avatar);
-      console.log('球员位置数据:', player.position);
 
       if (!player) {
         wx.hideLoading();
@@ -60,7 +57,7 @@ Page({
         return;
       }
 
-      // 确保 position 是数组（兼容旧的 positions 字段）
+      // 确保 position 是数组
       let positionData = player.position || player.positions || [];
       if (typeof positionData === 'string') {
         positionData = positionData.split(',').map(p => p.trim()).filter(p => p);
@@ -69,13 +66,12 @@ Page({
       }
       player.position = positionData;
 
-      // 兼容头像字段（可能是 avatar, photo, image）
+      // 兼容头像字段
       if (!player.avatar && (player.photo || player.image)) {
         player.avatar = player.photo || player.image;
       }
-      console.log('处理后的位置数据:', player.position);
 
-      // 计算能力值总分（使用所有能力字段）
+      // 计算能力值总分
       let total = 0;
       let count = 0;
       this.data.allAbilityList.forEach(item => {
@@ -89,7 +85,6 @@ Page({
       this.setData({
         player,
         abilityTotal,
-        // 重置分页状态
         page: 1,
         hasMore: true,
         matchRecords: []
@@ -112,14 +107,12 @@ Page({
   // 获取当前赛季
   async loadCurrentSeason() {
     try {
-      const res = await db.collection('matches')
-        .orderBy('matchDate', 'desc')
-        .limit(1)
-        .get();
+      const res = await matchAPI.getMatches({ limit: 1 });
+      const matches = res.data || [];
 
       let latestSeason = '';
-      if (res.data.length > 0 && res.data[0].season) {
-        latestSeason = res.data[0].season;
+      if (matches.length > 0 && matches[0].season) {
+        latestSeason = matches[0].season;
       }
 
       this.setData({ selectedSeason: latestSeason });
@@ -128,7 +121,7 @@ Page({
     }
   },
 
-  // 加载比赛记录（适配 goalStats/assistStats: {playerId: count} 格式，支持分页）
+  // 加载比赛记录
   async loadMatchRecords(isLoadMore = false) {
     if (this.data.loading) return;
 
@@ -138,78 +131,33 @@ Page({
       const playerId = this.data.playerId;
       const selectedSeason = this.data.selectedSeason;
 
-      // 构建查询条件：只查询当前赛季的比赛
-      let matchQueryCondition = {};
-      if (selectedSeason) {
-        matchQueryCondition.season = selectedSeason;
-      }
+      // 获取该球员的所有比赛记录
+      const recordsRes = await matchRecordAPI.getMatchRecordsByPlayer(playerId);
+      const allRecords = recordsRes.data || [];
 
-      // 先获取当前赛季的 match_records 总数
-      const countRes = await db.collection('match_records').count();
-      const totalRecords = countRes.total;
+      // 获取所有比赛信息
+      const matchesRes = await matchAPI.getMatches({ season: selectedSeason, limit: 100 });
+      const allMatches = matchesRes.data || [];
 
-      // 分批获取所有 match_records（get() 默认最多20条）
-      const batchSize = 20;
-      const allRecords = [];
-      for (let i = 0; i < totalRecords; i += batchSize) {
-        const batchRes = await db.collection('match_records')
-          .skip(i)
-          .limit(batchSize)
-          .get();
-        allRecords.push(...(batchRes.data || []));
-      }
+      const matchMap = {};
+      allMatches.forEach(m => {
+        matchMap[m._id || m.id] = m;
+      });
 
       // 筛选包含该球员的记录
       const playerRecords = allRecords.filter(r => {
-        if (r.goalStats && typeof r.goalStats === 'object' && r.goalStats.hasOwnProperty(playerId)) {
-          return true;
-        }
-        if (r.assistStats && typeof r.assistStats === 'object' && r.assistStats.hasOwnProperty(playerId)) {
-          return true;
-        }
-        return false;
+        const match = matchMap[r.matchId];
+        if (!match) return false;
+        if (selectedSeason && match.season !== selectedSeason) return false;
+        return true;
       });
 
-      // 按 matchId 去重（同一比赛可能有多条记录）
-      const uniqueRecords = [];
-      const seenMatchIds = new Set();
-      for (const r of playerRecords) {
-        if (!seenMatchIds.has(r.matchId)) {
-          seenMatchIds.add(r.matchId);
-          uniqueRecords.push(r);
-        }
-      }
-
-      // 获取所有比赛信息用于排序和赛季过滤
-      const allMatchIds = uniqueRecords.map(r => r.matchId);
-      const matchBatchSize = 20;
-      const allMatches = [];
-      for (let i = 0; i < allMatchIds.length; i += matchBatchSize) {
-        const batchIds = allMatchIds.slice(i, i + matchBatchSize);
-        const matches = await db.collection('matches')
-          .where({ _id: _.in(batchIds) })
-          .get();
-        allMatches.push(...matches.data);
-      }
-
-      // 按赛季过滤
-      const filteredMatches = allMatches.filter(m => {
-        if (!selectedSeason) return true;
-        return m.season === selectedSeason;
-      });
-
-      const matchMap = {};
-      filteredMatches.forEach(m => {
-        matchMap[m._id] = m;
-      });
-
-      // 只保留在 filteredMatches 中的记录，并按比赛日期降序排序
-      const filteredRecords = uniqueRecords.filter(r => matchMap.hasOwnProperty(r.matchId));
-      const sortedRecords = filteredRecords.sort((a, b) => {
+      // 按比赛日期降序排序
+      const sortedRecords = playerRecords.sort((a, b) => {
         const matchA = matchMap[a.matchId] || {};
         const matchB = matchMap[b.matchId] || {};
-        const dateA = new Date(matchA.matchDate || 0);
-        const dateB = new Date(matchB.matchDate || 0);
+        const dateA = new Date(matchA.scheduleDate || matchA.matchDate || 0);
+        const dateB = new Date(matchB.scheduleDate || matchB.matchDate || 0);
         return dateB - dateA;
       });
 
@@ -223,20 +171,18 @@ Page({
       let totalGoals = 0;
       let totalAssists = 0;
       sortedRecords.forEach(r => {
-        totalGoals += r.goalStats?.[playerId] || 0;
-        totalAssists += r.assistStats?.[playerId] || 0;
+        totalGoals += r.goals || 0;
+        totalAssists += r.assists || 0;
       });
 
       // 构建显示数据
       const matchRecords = pageRecords.map(r => {
         const match = matchMap[r.matchId] || {};
-        const date = new Date(match.matchDate);
-        const goals = r.goalStats?.[playerId] || 0;
-        const assists = r.assistStats?.[playerId] || 0;
+        const date = new Date(match.scheduleDate || match.matchDate);
         return {
           matchId: r.matchId,
-          goals,
-          assists,
+          goals: r.goals || 0,
+          assists: r.assists || 0,
           matchDate: `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`,
           opponent: match.opponent || '未知',
           result: match.result || '-',
@@ -271,11 +217,8 @@ Page({
   // 加载出勤统计
   async loadAttendanceStats() {
     try {
-      const records = await db.collection('attendance')
-        .where({
-          playerId: this.data.playerId
-        })
-        .get();
+      const recordsRes = await attendanceAPI.getAttendance({ playerId: this.data.playerId });
+      const records = recordsRes.data || [];
 
       const stats = {
         present: 0,
@@ -283,10 +226,10 @@ Page({
         absent: 0
       };
 
-      records.data.forEach(r => {
-        if (r.status === '出勤') stats.present++;
+      records.forEach(r => {
+        if (r.status === '参加' || r.status === '出勤') stats.present++;
         else if (r.status === '请假') stats.leave++;
-        else if (r.status === '缺勤') stats.absent++;
+        else if (r.status === '缺席') stats.absent++;
       });
 
       // 计算出勤率
@@ -305,15 +248,14 @@ Page({
   // 绘制能力值雷达图
   drawRadarChart() {
     const ctx = wx.createCanvasContext('abilityRadar', this);
-    // 获取 Canvas 实际宽度（rpx 转 px）
     const query = this.createSelectorQuery();
     query.select('#abilityRadar').boundingClientRect((rect) => {
       if (!rect) return;
       const width = rect.width;
-      const height = 240; // 减小高度
+      const height = 240;
       const centerX = width / 2;
       const centerY = height / 2;
-      const radius = Math.min(width, height) / 2 - 25; // 自适应半径
+      const radius = Math.min(width, height) / 2 - 25;
 
       const ability = this.data.player.ability || {};
       const values = this.data.abilityList.map(item => ability[item.key] || 0);
@@ -382,7 +324,7 @@ Page({
       ctx.setFillStyle('#666');
       this.data.abilityList.forEach((item, i) => {
         const angle = i * angleStep - Math.PI / 2;
-        const labelR = radius + 18; // 标签位置稍向外
+        const labelR = radius + 18;
         const x = centerX + Math.cos(angle) * labelR;
         const y = centerY + Math.sin(angle) * labelR;
         ctx.setTextAlign('center');
@@ -434,7 +376,7 @@ Page({
       success: async (res) => {
         if (res.confirm) {
           try {
-            await db.collection('players').doc(this.data.playerId).remove();
+            await playerAPI.deletePlayer(this.data.playerId);
             wx.showToast({ title: '删除成功' });
             setTimeout(() => {
               wx.navigateBack();

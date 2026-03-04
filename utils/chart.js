@@ -9,12 +9,11 @@ class Chart {
     this.ctx = canvas.getContext('2d');
     this.width = canvas.width;
     this.height = canvas.height;
-    this.options = {
+    this.options = Object.assign({
       padding: options.padding || 20,
       colors: options.colors || ['#1989fa', '#52c41a', '#faad14', '#fa5151', '#722ed1', '#13c2c2', '#eb2f96'],
-      fontSize: options.fontSize || 12,
-      ...options
-    };
+      fontSize: options.fontSize || 12
+    }, options);
   }
 
   /**
@@ -42,7 +41,8 @@ class Chart {
 
     this.clear();
 
-    const maxVal = maxValue || Math.max(...data.map(d => d.value));
+    const values = data.map(d => d.value);
+    const maxVal = maxValue || Math.max.apply(null, values);
     const chartWidth = this.width - padding * 2 - labelWidth - valueWidth;
     const chartHeight = data.length * (barHeight + barGap);
     const startY = padding;
@@ -215,7 +215,8 @@ class Chart {
     const rankWidth = 40;
     const nameWidth = 100;
     const chartWidth = this.width - padding * 2 - rankWidth - nameWidth - 50;
-    const maxValue = Math.max(...data.map(d => d.value));
+    const values = data.map(d => d.value);
+    const maxValue = Math.max.apply(null, values);
 
     data.forEach((item, index) => {
       const y = padding + index * itemHeight;
@@ -268,7 +269,7 @@ function createChart(canvasId, options = {}) {
           const dpr = wx.getSystemInfoSync().pixelRatio;
           canvas.width = res[0].width * dpr;
           canvas.height = res[0].height * dpr;
-          const chart = new Chart(canvas, { ...options, dpr });
+          const chart = new Chart(canvas, Object.assign({}, options, { dpr }));
           resolve(chart);
         } else {
           resolve(null);

@@ -1,7 +1,6 @@
 // pages/matches/matches.js
 const app = getApp();
-const db = wx.cloud.database();
-const _ = db.command;
+const { matchAPI } = require('../../utils/http.js');
 
 const PAGE_SIZE = 10;
 
@@ -35,27 +34,12 @@ Page({
   // 加载赛季列表
   async loadSeasons() {
     try {
-      // 获取所有有赛季数据的比赛
-      const res = await db.collection('matches')
-        .orderBy('matchDate', 'desc')
-        .limit(1)
-        .get();
+      const res = await matchAPI.getMatches({ limit: 100 });
+      const allMatches = res.data || [];
 
-      // 获取最新赛季
-      let latestSeason = '';
-      if (res.data.length > 0 && res.data[0].season) {
-        latestSeason = res.data[0].season;
-      }
-
-      // 获取所有唯一赛季用于下拉选择
-      const allRes = await db.collection('matches')
-        .where({
-          season: _.exists(true)
-        })
-        .get();
-
+      // 提取所有唯一赛季
       const seasonsMap = {};
-      allRes.data.forEach(function(m) {
+      allMatches.forEach(function(m) {
         if (m.season) {
           seasonsMap[m.season] = true;
         }
@@ -66,7 +50,7 @@ Page({
       const allSeasons = ['全部'].concat(uniqueSeasons);
 
       // 默认选择最新赛季
-      const defaultSeason = latestSeason || '全部';
+      const defaultSeason = uniqueSeasons.length > 0 ? uniqueSeasons[0] : '全部';
 
       this.setData({
         seasons: allSeasons,
@@ -97,39 +81,19 @@ Page({
 
     try {
       const page = reset ? 1 : this.data.page;
-      const skip = (page - 1) * PAGE_SIZE;
       const selectedSeason = this.data.selectedSeason;
 
-      // 获取已完成的比赛（result 为胜/平/负）
-      const nowISO = new Date().toISOString();
+      // 获取所有比赛
+      const res = await matchAPI.getMatches({ season: selectedSeason === '全部' ? '' : selectedSeason, limit: 100 });
+      let allMatches = res.data || [];
 
-      // 构建查询条件
-      let queryCondition = {
-        matchDate: _.lt(nowISO),
-        result: _.in(['胜', '平', '负'])
-      };
-      if (selectedSeason) {
-        queryCondition.season = selectedSeason;
-      }
+      // 过滤已完成的比赛（有result结果）
+      allMatches = allMatches.filter(m => m.result && ['胜', '平', '负'].includes(String(m.result).trim()));
 
-      // 先确认云数据库中实际有多少条已完成的记录
-      const verifyCount = await db.collection('matches')
-        .where(queryCondition)
-        .count();
-      const totalMatches = verifyCount.total;
-
-      // 客户端 get() 最多只返回 20 条，需要分批查询获取所有数据
-      const batchSize = 20;
-      let allMatches = [];
-      for (let i = 0; i < totalMatches; i += batchSize) {
-        const batchRes = await db.collection('matches')
-          .where(queryCondition)
-          .orderBy('matchDate', 'desc')
-          .skip(i)
-          .limit(batchSize)
-          .get();
-        allMatches = allMatches.concat(batchRes.data);
-      }
+      // 按日期降序排序
+      allMatches.sort((a, b) => {
+        return new Date(b.scheduleDate || b.matchDate) - new Date(a.scheduleDate || a.matchDate);
+      });
 
       // 统计各种结果
       const wins = allMatches.filter(m => String(m.result).trim() === '胜').length;
@@ -149,15 +113,10 @@ Page({
 
       // 分页获取当前页数据
       const skipPage = (page - 1) * PAGE_SIZE;
-      const res = await db.collection('matches')
-        .where(queryCondition)
-        .orderBy('matchDate', 'desc')
-        .skip(skipPage)
-        .limit(PAGE_SIZE)
-        .get();
+      const pageMatches = allMatches.slice(skipPage, skipPage + PAGE_SIZE);
 
-      const matches = res.data.map(m => {
-        const dateStr = m.matchDate;
+      const matches = pageMatches.map(m => {
+        const dateStr = m.scheduleDate || m.matchDate;
         const date = new Date(dateStr);
         return Object.assign({}, m, {
           month: isNaN(date.getMonth()) ? '' : date.getMonth() + 1,
@@ -167,7 +126,7 @@ Page({
       });
 
       const newMatches = reset ? matches : this.data.matches.concat(matches);
-      const hasMore = newMatches.length < totalMatches;
+      const hasMore = newMatches.length < allMatches.length;
 
       this.setData({
         matches: newMatches,

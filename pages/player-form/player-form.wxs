@@ -1,0 +1,12 @@
+// WXS 辅助函数
+function includes(arr, value) {
+  if (!arr || !arr.length) return false;
+  for (var i = 0; i < arr.length; i++) {
+    if (arr[i] === value) return true;
+  }
+  return false;
+}
+
+module.exports = {
+  includes: includes
+};

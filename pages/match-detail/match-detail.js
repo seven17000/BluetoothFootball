@@ -1,7 +1,6 @@
 // pages/match-detail/match-detail.js
 const app = getApp();
-const db = wx.cloud.database();
-const _ = db.command;
+const { matchAPI, matchRecordAPI, playerAPI } = require('../../utils/http.js');
 
 Page({
   data: {
@@ -30,9 +29,8 @@ Page({
     wx.showLoading({ title: '加载中...' });
 
     try {
-      const matchRes = await db.collection('matches').doc(this.data.matchId).get();
-      const match = matchRes.data;
-      const date = new Date(match.matchDate);
+      const match = await matchAPI.getMatch(this.data.matchId);
+      const date = new Date(match.scheduleDate || match.matchDate);
 
       this.setData({
         match: {
@@ -55,72 +53,35 @@ Page({
     }
   },
 
-  // 加载球员表现记录（适配 goalStats/assistStats: {playerId: count} 格式）
+  // 加载球员表现记录
   async loadPlayerRecords() {
     try {
-      const recordsRes = await db.collection('match_records')
-        .where({
-          matchId: this.data.matchId
-        })
-        .get();
-
+      const recordsRes = await matchRecordAPI.getMatchRecordsByMatch(this.data.matchId);
       const records = recordsRes.data || [];
 
       if (records.length > 0) {
-        // 从 goalStats 和 assistStats 中提取所有球员ID
-        const playerIdSet = new Set();
-        records.forEach(r => {
-          if (r.goalStats && typeof r.goalStats === 'object') {
-            Object.keys(r.goalStats).forEach(id => playerIdSet.add(id));
-          }
-          if (r.assistStats && typeof r.assistStats === 'object') {
-            Object.keys(r.assistStats).forEach(id => playerIdSet.add(id));
-          }
-        });
-
-        const playerIds = Array.from(playerIdSet);
-        const players = await db.collection('players')
-          .where({
-            _id: _.in(playerIds)
-          })
-          .get();
+        // 获取所有球员ID
+        const playerIds = records.map(r => r.playerId);
+        const playersRes = await playerAPI.getPlayers();
+        const players = playersRes.data || [];
 
         const playerMap = {};
-        players.data.forEach(p => {
-          playerMap[p._id] = p;
+        players.forEach(p => {
+          playerMap[p._id || p.id] = p;
         });
 
-        // 构建球员记录（每条记录代表一个球员在一场比赛中的表现）
+        // 构建球员记录
         const playerRecords = [];
         records.forEach(r => {
-          // 从 goalStats 获取进球数据
-          if (r.goalStats && typeof r.goalStats === 'object') {
-            Object.entries(r.goalStats).forEach(([playerId, goals]) => {
-              playerRecords.push({
-                playerId,
-                goals,
-                assists: r.assistStats?.[playerId] || 0,
-                playerName: playerMap[playerId]?.name || '未知',
-                position: playerMap[playerId]?.position || ''
-              });
-            });
-          }
-          // 从 assistStats 获取助攻数据（只出现在 assistStats 中的球员）
-          if (r.assistStats && typeof r.assistStats === 'object') {
-            Object.entries(r.assistStats).forEach(([playerId, assists]) => {
-              // 如果这个球员已经在 goalStats 中处理过了，跳过
-              const existing = playerRecords.find(pr => pr.playerId === playerId && pr.goals > 0);
-              if (!existing) {
-                playerRecords.push({
-                  playerId,
-                  goals: 0,
-                  assists,
-                  playerName: playerMap[playerId]?.name || '未知',
-                  position: playerMap[playerId]?.position || ''
-                });
-              }
-            });
-          }
+          const playerId = r.playerId;
+          const player = playerMap[playerId] || {};
+          playerRecords.push({
+            playerId,
+            goals: r.goals || 0,
+            assists: r.assists || 0,
+            playerName: player.name || '未知',
+            position: player.position || ''
+          });
         });
 
         this.setData({ playerRecords });
@@ -137,7 +98,7 @@ Page({
       if (record.goals > 0) {
         for (let i = 0; i < record.goals; i++) {
           goalDetails.push({
-            time: (i + 1) * 15 + Math.floor(Math.random() * 15), // 模拟进球时间
+            time: (i + 1) * 15 + Math.floor(Math.random() * 15),
             scorer: record.playerName,
             assist: record.assists > 0 ? '队友' : ''
           });
@@ -188,12 +149,7 @@ Page({
 
           try {
             // 删除比赛
-            await db.collection('matches').doc(this.data.matchId).remove();
-
-            // 删除相关球员记录
-            await db.collection('match_records')
-              .where({ matchId: this.data.matchId })
-              .remove();
+            await matchAPI.deleteMatch(this.data.matchId);
 
             wx.showToast({ title: '删除成功' });
             setTimeout(() => {

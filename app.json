@@ -16,8 +16,10 @@
     "pages/stats/assists/assists",
     "pages/stats/attendance/attendance",
     "pages/profile/profile",
-    "pages/profile-edit/profile-edit"
+    "pages/profile-edit/profile-edit",
+    "pages/team-info/team-info"
   ],
+  "lazyCodeLoading": "requiredComponents",
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#1989fa",

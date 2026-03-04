@@ -1,7 +1,6 @@
 // pages/record-form/record-form.js
 const app = getApp();
-const db = wx.cloud.database();
-const _ = db.command;
+const { matchAPI, matchRecordAPI, playerAPI } = require('../../utils/http.js');
 
 Page({
   data: {
@@ -24,9 +23,8 @@ Page({
   // 加载比赛信息
   async loadMatchInfo() {
     try {
-      const res = await db.collection('matches').doc(this.data.matchId).get();
-      const match = res.data;
-      const date = new Date(match.matchDate);
+      const match = await matchAPI.getMatch(this.data.matchId);
+      const date = new Date(match.scheduleDate || match.matchDate);
 
       this.setData({
         match: {
@@ -42,12 +40,10 @@ Page({
   // 加载球员列表
   async loadPlayers() {
     try {
-      const res = await db.collection('players')
-        .where({ isActive: true })
-        .orderBy('number', 'asc')
-        .get();
+      const res = await playerAPI.getPlayers({ isActive: true });
+      const players = res.data || [];
 
-      this.setData({ players: res.data });
+      this.setData({ players });
 
       // 加载已有的球员记录
       await this.loadExistingRecords();
@@ -59,14 +55,11 @@ Page({
   // 加载已有的球员记录
   async loadExistingRecords() {
     try {
-      const res = await db.collection('match_records')
-        .where({
-          matchId: this.data.matchId
-        })
-        .get();
+      const res = await matchRecordAPI.getMatchRecordsByMatch(this.data.matchId);
+      const records = res.data || [];
 
       const existingRecords = {};
-      res.data.forEach(record => {
+      records.forEach(record => {
         existingRecords[record.playerId] = record;
       });
 
@@ -88,7 +81,7 @@ Page({
     const { players, selectedPlayers, existingRecords } = this.data;
 
     const selectedPlayerRecords = selectedPlayers.map(playerId => {
-      const player = players.find(p => p._id === playerId);
+      const player = players.find(p => (p._id || p.id) === playerId);
       const existing = existingRecords[playerId] || {};
 
       return {
@@ -97,10 +90,10 @@ Page({
         position: player?.position || '',
         goals: existing.goals || 0,
         assists: existing.assists || 0,
-        yellowCard: existing.yellowCard || 0,
-        redCard: existing.redCard || 0,
+        yellowCards: existing.yellowCards || 0,
+        redCards: existing.redCards || 0,
         rating: existing.rating || 5,
-        _id: existing._id || ''
+        _id: existing._id || existing.id || ''
       };
     });
 
@@ -153,20 +146,20 @@ Page({
   onYellowChange(e) {
     const index = e.currentTarget.dataset.index;
     const type = e.currentTarget.dataset.type;
-    let value = this.data.selectedPlayerRecords[index].yellowCard;
+    let value = this.data.selectedPlayerRecords[index].yellowCards;
 
     if (type === 'plus') value++;
     else if (value > 0) value--;
 
     this.setData({
-      [`selectedPlayerRecords[${index}].yellowCard`]: value
+      [`selectedPlayerRecords[${index}].yellowCards`]: value
     });
   },
 
   onYellowInput(e) {
     const index = e.currentTarget.dataset.index;
     this.setData({
-      [`selectedPlayerRecords[${index}].yellowCard`]: parseInt(e.detail.value) || 0
+      [`selectedPlayerRecords[${index}].yellowCards`]: parseInt(e.detail.value) || 0
     });
   },
 
@@ -174,20 +167,20 @@ Page({
   onRedChange(e) {
     const index = e.currentTarget.dataset.index;
     const type = e.currentTarget.dataset.type;
-    let value = this.data.selectedPlayerRecords[index].redCard;
+    let value = this.data.selectedPlayerRecords[index].redCards;
 
     if (type === 'plus') value++;
     else if (value > 0) value--;
 
     this.setData({
-      [`selectedPlayerRecords[${index}].redCard`]: value
+      [`selectedPlayerRecords[${index}].redCards`]: value
     });
   },
 
   onRedInput(e) {
     const index = e.currentTarget.dataset.index;
     this.setData({
-      [`selectedPlayerRecords[${index}].redCard`]: parseInt(e.detail.value) || 0
+      [`selectedPlayerRecords[${index}].redCards`]: parseInt(e.detail.value) || 0
     });
   },
 
@@ -209,38 +202,35 @@ Page({
     wx.showLoading({ title: '保存中...' });
 
     try {
-      const batch = db.batch();
-
       // 先删除该场比赛的所有已有记录
-      batch.where({
-        matchId: this.data.matchId
-      }).remove('match_records');
+      const oldRecords = await matchRecordAPI.getMatchRecordsByMatch(this.data.matchId);
+      if (oldRecords.data && oldRecords.data.length > 0) {
+        for (const record of oldRecords.data) {
+          await matchRecordAPI.deleteMatchRecord(record._id || record.id);
+        }
+      }
 
       // 添加新记录
-      this.data.selectedPlayerRecords.forEach(record => {
-        const data = {
+      for (const record of this.data.selectedPlayerRecords) {
+        await matchRecordAPI.createMatchRecord({
           matchId: this.data.matchId,
           playerId: record.playerId,
           goals: record.goals,
           assists: record.assists,
-          yellowCard: record.yellowCard,
-          redCard: record.redCard,
+          yellowCards: record.yellowCards,
+          redCards: record.redCards,
           rating: parseFloat(record.rating) || 5,
-          position: record.position,
-          createTime: new Date()
-        };
+          minutesPlayed: 90
+        });
+      }
 
-        batch.add('match_records', data);
-      });
-
-      await batch.commit();
-
-      wx.showToast({ title: '保存成功' });
+      wx.showToast({ title: '保存成功', icon: 'success', duration: 1500 });
       setTimeout(() => {
         wx.navigateBack();
       }, 1500);
     } catch (error) {
       console.error('保存失败', error);
+      wx.hideLoading();
       wx.showToast({ title: '保存失败', icon: 'none' });
     } finally {
       wx.hideLoading();

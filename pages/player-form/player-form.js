@@ -1,6 +1,6 @@
 // pages/player-form/player-form.js
 const app = getApp();
-const db = wx.cloud.database();
+const { playerAPI } = require('../../utils/http.js');
 const { FORM_ABILITY_CONFIG } = require('../../utils/constants.js');
 
 Page({
@@ -76,9 +76,7 @@ Page({
     wx.showLoading({ title: '加载中...' });
 
     try {
-      console.log('loadPlayerData - playerId:', this.data.playerId);
-      const res = await db.collection('players').doc(this.data.playerId).get();
-      const player = res.data;
+      const player = await playerAPI.getPlayer(this.data.playerId);
       console.log('加载的球员数据:', player);
 
       // 初始化能力值对象（如果没有则创建默认值为60）
@@ -87,10 +85,23 @@ Page({
         ability[item.key] = player.ability?.[item.key] || 60;
       });
 
+      // 处理position和tags字段
+      let positionData = player.position || [];
+      if (typeof positionData === 'string') {
+        positionData = positionData.split(',').map(p => p.trim()).filter(p => p);
+      }
+
+      let tagsData = player.tags || [];
+      if (typeof tagsData === 'string') {
+        tagsData = tagsData.split(',').map(p => p.trim()).filter(p => p);
+      }
+
       this.setData({
         formData: {
           ...this.data.formData,
           ...player,
+          position: positionData,
+          tags: tagsData,
           ability
         }
       });
@@ -176,23 +187,17 @@ Page({
             wx.showLoading({ title: '上传中...' });
 
             try {
-              // 上传到云存储
-              const uploadResult = await wx.cloud.uploadFile({
-                cloudPath: `avatars/${Date.now()}-${Math.random().toString(36).substr(2, 9)}.png`,
-                filePath: croppedPath
-              });
-
-              // 保存云存储文件ID
+              // TODO: 需要实现文件上传到服务器的功能
+              // 暂时使用本地临时路径
               this.setData({
-                'formData.avatar': uploadResult.fileID
+                'formData.avatar': croppedPath
               });
-              console.log('头像上传成功:', uploadResult.fileID);
+              wx.hideLoading();
               wx.showToast({ title: '上传成功', icon: 'success' });
             } catch (error) {
               console.error('上传头像失败', error);
-              wx.showToast({ title: '上传失败', icon: 'none' });
-            } finally {
               wx.hideLoading();
+              wx.showToast({ title: '上传失败', icon: 'none' });
             }
           },
           fail: (err) => {
@@ -328,31 +333,21 @@ Page({
     wx.showLoading({ title: '保存中...' });
 
     try {
-      // 移除 _id 字段（编辑时可能存在）
-      const { _id, ...cleanFormData } = this.data.formData;
       const formData = {
-        ...cleanFormData,
+        ...this.data.formData,
         number: parseInt(number),
-        updateTime: new Date()
+        isActive: true,
+        updateTime: new Date().toISOString()
       };
       console.log('提交数据:', formData);
 
       if (this.data.isEdit) {
         // 更新
-        console.log('更新球员ID:', this.data.playerId);
-        console.log('更新数据:', formData);
-
-        const updateRes = await db.collection('players').doc(this.data.playerId).update({
-          data: formData
-        });
-        console.log('更新结果:', updateRes);
+        await playerAPI.updatePlayer(this.data.playerId, formData);
       } else {
         // 新增
-        formData.createTime = new Date();
-        formData.isActive = true;
-        await db.collection('players').add({
-          data: formData
-        });
+        formData.createTime = new Date().toISOString();
+        await playerAPI.createPlayer(formData);
       }
 
       wx.hideLoading();

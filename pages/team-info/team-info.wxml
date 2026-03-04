@@ -58,19 +58,19 @@
       </view>
       <view class="form-group">
         <text class="form-label">成立地点</text>
-        <input class="form-input" placeholder="请输入成立地点" value="{{editData.location}}" bindinput="bindLocationInput"/>
+        <input class="form-input" placeholder-class="form-input-placeholder" placeholder="请输入成立地点" value="{{editData.location}}" bindinput="bindLocationInput"/>
       </view>
       <view class="form-group">
         <text class="form-label">活跃球员数</text>
-        <input class="form-input" type="number" placeholder="请输入活跃球员数" value="{{editData.activePlayerCount}}" bindinput="bindActivePlayerCountInput"/>
+        <input class="form-input" placeholder-class="form-input-placeholder" type="number" placeholder="请输入活跃球员数" value="{{editData.activePlayerCount}}" bindinput="bindActivePlayerCountInput"/>
       </view>
       <view class="form-group">
         <text class="form-label">全部球员数</text>
-        <input class="form-input" type="number" placeholder="请输入全部球员数" value="{{editData.totalPlayerCount}}" bindinput="bindTotalPlayerCountInput"/>
+        <input class="form-input" placeholder-class="form-input-placeholder" type="number" placeholder="请输入全部球员数" value="{{editData.totalPlayerCount}}" bindinput="bindTotalPlayerCountInput"/>
       </view>
       <view class="form-group">
         <text class="form-label">球队介绍</text>
-        <textarea class="form-textarea" placeholder="请输入球队介绍" value="{{editData.description}}" bindinput="bindDescriptionInput"/>
+        <textarea class="form-textarea" placeholder-class="form-input-placeholder" placeholder="请输入球队介绍" value="{{editData.description}}" bindinput="bindDescriptionInput"/>
       </view>
     </view>
     <view class="modal-footer">
