@@ -1,6 +1,6 @@
 // pages/profile/profile.js
 const app = getApp();
-const db = wx.cloud.database();
+const { userAPI } = require('../../utils/http.js');
 
 Page({
   data: {
@@ -34,29 +34,47 @@ Page({
         lang: 'zh_CN'
       });
 
-      // 调用云函数登录
-      const loginResult = await wx.cloud.callFunction({
-        name: 'login',
-        data: {
-          userInfo: userProfile.userInfo
-        }
-      });
+      const userInfo = userProfile.userInfo;
+      const openid = userInfo.openid || 'wx_' + Date.now(); // 模拟openid
 
-      if (loginResult.result && loginResult.result.success) {
-        const userData = loginResult.result.data;
-        app.globalData.userInfo = userData;
-        app.globalData.userRole = userData.role;
+      // 调用服务器API创建/获取用户
+      try {
+        const userData = await userAPI.getUser(openid);
+        if (userData) {
+          app.globalData.userInfo = userData;
+          app.globalData.userRole = userData.role;
+          app.globalData.isLoggedIn = true;
+          wx.setStorageSync('userInfo', userData);
+
+          this.setData({
+            isLoggedIn: true,
+            userInfo: userData,
+            isAdmin: userData.role === 'admin'
+          });
+        }
+      } catch (e) {
+        // 用户不存在，创建新用户
+        await userAPI.createUser({
+          openid: openid,
+          name: userInfo.nickName,
+          avatar: userInfo.avatarUrl,
+          role: 'user'
+        });
+        
+        const newUserData = await userAPI.getUser(openid);
+        app.globalData.userInfo = newUserData;
+        app.globalData.userRole = newUserData.role;
         app.globalData.isLoggedIn = true;
-        wx.setStorageSync('userInfo', userData);
+        wx.setStorageSync('userInfo', newUserData);
 
         this.setData({
           isLoggedIn: true,
-          userInfo: userData,
-          isAdmin: userData.role === 'admin'
+          userInfo: newUserData,
+          isAdmin: false
         });
-
-        wx.showToast({ title: '登录成功' });
       }
+
+      wx.showToast({ title: '登录成功' });
     } catch (error) {
       console.error('登录失败', error);
       wx.showToast({ title: '登录失败', icon: 'none' });
@@ -107,7 +125,7 @@ Page({
   goToAbout() {
     wx.showModal({
       title: '关于球队管理',
-      content: '球队管理小程序 v1.0.0\n\n用于管理球队球员信息、比赛数据、出勤记录等。',
+      content: '球队管理小程序 v1.0.0\n\n用于管理球队球员信息、比赛数据，出勤记录等。',
       showCancel: false
     });
   }

@@ -1,7 +1,6 @@
 // pages/attendance/attendance.js
 const app = getApp();
-const db = wx.cloud.database();
-const _ = db.command;
+const { playerAPI, attendanceAPI } = require('../../utils/http.js');
 const { EVENT_TYPES, ATTENDANCE_STATUS } = require('../../utils/constants.js');
 
 Page({
@@ -38,11 +37,8 @@ Page({
   // 加载球员列表
   async loadPlayers() {
     try {
-      const res = await db.collection('players')
-        .where({ isActive: true })
-        .orderBy('number', 'asc')
-        .get();
-      this.setData({ players: res.data });
+      const res = await playerAPI.getPlayers({ isActive: 1, page: 1, pageSize: 1000 });
+      this.setData({ players: res || [] });
     } catch (error) {
       console.error('加载球员失败', error);
     }
@@ -53,30 +49,13 @@ Page({
     wx.showLoading({ title: '加载中...' });
 
     try {
-      let query = db.collection('attendance').orderBy('eventDate', 'desc');
-
-      // 筛选类型
-      if (this.data.filterType) {
-        query = query.where({ eventType: this.data.filterType });
-      }
-
-      const res = await query.get();
-
-      if (res.data.length > 0) {
-        const playerIds = [...new Set(res.data.map(r => r.playerId))];
-        const players = await db.collection('players')
-          .where({ _id: _.in(playerIds) })
-          .get();
-
-        const playerMap = {};
-        players.data.forEach(p => {
-          playerMap[p._id] = { name: p.name, number: p.number };
-        });
-
+      const res = await attendanceAPI.getAttendance({});
+      
+      if (res && res.length > 0) {
         // 按日期分组
         const grouped = {};
-        res.data.forEach(record => {
-          const date = new Date(record.eventDate);
+        res.forEach(record => {
+          const date = new Date(record.date);
           const dateKey = `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
 
           if (!grouped[dateKey]) {
@@ -85,8 +64,6 @@ Page({
 
           grouped[dateKey].push({
             ...record,
-            playerName: playerMap[record.playerId]?.name || '未知',
-            playerNumber: playerMap[record.playerId]?.number || 0,
             statusClass: record.status === '出勤' ? 'present' : (record.status === '请假' ? 'leave' : 'absent')
           });
         });
@@ -169,7 +146,8 @@ Page({
       return;
     }
 
-    const { date, eventType, selectedPlayers, status, reason } = this.data;
+    const { date, eventType, status, reason } = this.data.formData;
+    const { selectedPlayers: selectedPlayerIds } = this.data;
 
     if (!date) {
       wx.showToast({ title: '请选择日期', icon: 'none' });
@@ -179,7 +157,7 @@ Page({
       wx.showToast({ title: '请选择类型', icon: 'none' });
       return;
     }
-    if (selectedPlayers.length === 0) {
+    if (selectedPlayerIds.length === 0) {
       wx.showToast({ title: '请选择球员', icon: 'none' });
       return;
     }
@@ -187,21 +165,17 @@ Page({
     wx.showLoading({ title: '保存中...' });
 
     try {
-      const eventDate = new Date(date);
-      const batch = db.batch();
-
-      selectedPlayers.forEach(playerId => {
-        batch.add('attendance', {
+      for (const playerId of selectedPlayerIds) {
+        const player = this.data.players.find(p => p._id === playerId);
+        await attendanceAPI.createAttendance({
           playerId,
-          eventType,
-          eventDate,
-          status,
-          reason: status === '请假' ? reason : '',
-          createTime: new Date()
+          playerName: player ? player.name : '',
+          date: date,
+          type: eventType,
+          status: status,
+          remark: status === '请假' ? reason : ''
         });
-      });
-
-      await batch.commit();
+      }
 
       wx.showToast({ title: '添加成功' });
       this.resetForm();

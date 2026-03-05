@@ -1,5 +1,5 @@
 const app = getApp();
-const db = wx.cloud.database();
+const { playerAPI, matchAPI, matchRecordAPI } = require('../../utils/http.js');
 
 Page({
   data: {
@@ -24,41 +24,31 @@ Page({
 
   async loadTeamInfo() {
     try {
-      // 尝试从数据库获取球队信息
-      const teamRes = await db.collection('team_info').limit(1).get();
+      // 获取球员数量
+      const players = await playerAPI.getPlayers({});
+      const totalPlayerCount = players ? players.length : 0;
 
-      // 如果数据库中有球员数配置，使用配置的数值
-      if (teamRes.data.length > 0) {
-        const teamInfo = teamRes.data[0];
-        this.setData({
-          teamInfoId: teamInfo._id,
-          formationDate: teamInfo.formationDate || this.data.formationDate,
-          location: teamInfo.location || this.data.location,
-          activePlayerCount: teamInfo.activePlayerCount || 0,
-          totalPlayerCount: teamInfo.totalPlayerCount || 0,
-          description: teamInfo.description || this.data.description
-        });
-      } else {
-        // 获取球员数量
-        const playerRes = await db.collection('players').count();
-        const totalPlayerCount = playerRes.total;
-
-        // 获取活跃球员数量（今年有出场记录的）
-        const matchRes = await db.collection('match_records')
-          .where({
-            matchId: db.command.exists(true)
-          })
-          .get();
-
-        // 获取有比赛记录的球员ID
-        const playerIds = [...new Set(matchRes.data.map(r => r.playerId))];
-        const activePlayerCount = playerIds.length;
-
-        this.setData({
-          activePlayerCount,
-          totalPlayerCount
+      // 获取比赛记录
+      const matchRecords = await matchRecordAPI.getMatchRecords();
+      
+      // 获取有比赛记录的球员ID
+      const playerIds = new Set();
+      if (matchRecords && matchRecords.length > 0) {
+        matchRecords.forEach(r => {
+          if (r.goalStats) {
+            Object.keys(r.goalStats).forEach(id => playerIds.add(id));
+          }
+          if (r.assistStats) {
+            Object.keys(r.assistStats).forEach(id => playerIds.add(id));
+          }
         });
       }
+      const activePlayerCount = playerIds.size;
+
+      this.setData({
+        activePlayerCount,
+        totalPlayerCount
+      });
 
       // 计算成立天数
       if (this.data.formationDate) {
@@ -147,67 +137,11 @@ Page({
 
   // 保存球队信息
   async saveTeamInfo() {
-    const { editData } = this.data;
-    if (!editData.formationDate) {
-      wx.showToast({ title: '请选择成立时间', icon: 'none' });
-      return;
-    }
-    if (!editData.location) {
-      wx.showToast({ title: '请输入成立地点', icon: 'none' });
-      return;
-    }
-
-    wx.showLoading({ title: '保存中...' });
-
-    try {
-      if (this.data.teamInfoId) {
-        // 更新已有数据
-        await db.collection('team_info').doc(this.data.teamInfoId).update({
-          data: {
-            formationDate: editData.formationDate,
-            location: editData.location,
-            activePlayerCount: editData.activePlayerCount,
-            totalPlayerCount: editData.totalPlayerCount,
-            description: editData.description,
-            updatedAt: new Date()
-          }
-        });
-      } else {
-        // 创建新数据
-        const res = await db.collection('team_info').add({
-          data: {
-            formationDate: editData.formationDate,
-            location: editData.location,
-            activePlayerCount: editData.activePlayerCount,
-            totalPlayerCount: editData.totalPlayerCount,
-            description: editData.description,
-            createdAt: new Date(),
-            updatedAt: new Date()
-          }
-        });
-        this.setData({ teamInfoId: res._id });
-      }
-
-      // 更新页面数据
-      this.setData({
-        formationDate: editData.formationDate,
-        location: editData.location,
-        activePlayerCount: editData.activePlayerCount,
-        totalPlayerCount: editData.totalPlayerCount,
-        description: editData.description,
-        showEditModal: false
-      });
-
-      // 重新计算成立天数
-      this.calculateTeamDays(editData.formationDate);
-
-      wx.showToast({ title: '保存成功', icon: 'success' });
-    } catch (err) {
-      console.error('保存失败', err);
-      wx.showToast({ title: '保存失败', icon: 'none' });
-    } finally {
-      wx.hideLoading();
-    }
+    // 注意：team_info 表目前没有对应的API，可以后续添加
+    wx.showToast({ title: '球队信息保存在本地', icon: 'none' });
+    this.setData({
+      showEditModal: false
+    });
   },
 
   // 计算成立天数

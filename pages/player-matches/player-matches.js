@@ -1,6 +1,5 @@
 // pages/player-matches/player-matches.js
-const db = wx.cloud.database();
-const _ = db.command;
+const { playerAPI, matchAPI, matchRecordAPI } = require('../../utils/http.js');
 
 Page({
   data: {
@@ -31,10 +30,10 @@ Page({
   async loadPlayerName() {
     if (!this.data.playerName) {
       try {
-        const res = await db.collection('players').doc(this.data.playerId).get();
-        if (res.data) {
-          this.setData({ playerName: res.data.name });
-          wx.setNavigationBarTitle({ title: `${res.data.name}的比赛记录` });
+        const res = await playerAPI.getPlayer(this.data.playerId);
+        if (res) {
+          this.setData({ playerName: res.name });
+          wx.setNavigationBarTitle({ title: `${res.name}的比赛记录` });
         }
       } catch (error) {
         console.error('加载球员名称失败', error);
@@ -51,21 +50,9 @@ Page({
     try {
       const playerId = this.data.playerId;
 
-      // 先获取 match_records 总数
-      const countRes = await db.collection('match_records').count();
-      const totalRecords = countRes.total;
-
-      // 分批获取所有 match_records（get() 默认最多20条）
-      const batchSize = 20;
-      const allRecords = [];
-      for (let i = 0; i < totalRecords; i += batchSize) {
-        const batchRes = await db.collection('match_records')
-          .skip(i)
-          .limit(batchSize)
-          .get();
-        allRecords.push(...(batchRes.data || []));
-      }
-
+      // 获取所有比赛记录
+      const allRecords = await matchRecordAPI.getMatchRecords();
+      
       // 筛选包含该球员的记录
       const playerRecords = allRecords.filter(r => {
         if (r.goalStats && typeof r.goalStats === 'object' && r.goalStats.hasOwnProperty(playerId)) {
@@ -77,35 +64,15 @@ Page({
         return false;
       });
 
-      // 按 matchId 去重（同一比赛可能有多条记录）
-      const uniqueRecords = [];
-      const seenMatchIds = new Set();
-      for (const r of playerRecords) {
-        if (!seenMatchIds.has(r.matchId)) {
-          seenMatchIds.add(r.matchId);
-          uniqueRecords.push(r);
-        }
-      }
-
-      // 先获取所有比赛信息用于排序
-      const allMatchIds = uniqueRecords.map(r => r.matchId);
-      const matchBatchSize = 20;
-      const allMatches = [];
-      for (let i = 0; i < allMatchIds.length; i += matchBatchSize) {
-        const batchIds = allMatchIds.slice(i, i + matchBatchSize);
-        const matches = await db.collection('matches')
-          .where({ _id: _.in(batchIds) })
-          .get();
-        allMatches.push(...matches.data);
-      }
-
+      // 获取所有比赛信息
+      const allMatches = await matchAPI.getMatches({});
       const matchMap = {};
       allMatches.forEach(m => {
         matchMap[m._id] = m;
       });
 
       // 按比赛日期降序排序
-      const sortedRecords = uniqueRecords.sort((a, b) => {
+      const sortedRecords = playerRecords.sort((a, b) => {
         const matchA = matchMap[a.matchId] || {};
         const matchB = matchMap[b.matchId] || {};
         const dateA = new Date(matchA.matchDate || 0);

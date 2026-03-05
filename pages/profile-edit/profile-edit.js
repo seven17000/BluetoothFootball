@@ -1,6 +1,6 @@
 // pages/profile-edit/profile-edit.js
 const app = getApp();
-const db = wx.cloud.database();
+const { userAPI } = require('../../utils/http.js');
 
 Page({
   data: {
@@ -48,20 +48,29 @@ Page({
     });
   },
 
-  // 上传头像到云存储
+  // 上传头像（需要配置服务器支持）
   uploadAvatar(filePath) {
     wx.showLoading({ title: '上传中...' });
-
-    const cloudPath = `avatars/${this.data.userInfo.openid}/${Date.now()}.png`;
-
-    wx.cloud.uploadFile({
-      cloudPath,
-      filePath,
+    
+    // 注意：这里需要根据实际情况实现
+    // 如果服务器支持文件上传，需要实现对应的上传接口
+    wx.uploadFile({
+      url: 'https://your-server.com/api/upload', // 需要配置实际的上传地址
+      filePath: filePath,
+      name: 'file',
+      formData: {
+        openid: this.data.userInfo.openid
+      },
       success: (res) => {
-        this.setData({
-          'formData.avatar': res.fileID
-        });
-        wx.showToast({ title: '头像已更新', icon: 'success' });
+        const data = JSON.parse(res.data);
+        if (data.code === 0) {
+          this.setData({
+            'formData.avatar': data.data.url
+          });
+          wx.showToast({ title: '头像已更新', icon: 'success' });
+        } else {
+          wx.showToast({ title: '上传失败', icon: 'none' });
+        }
       },
       fail: (err) => {
         console.error('上传失败', err);
@@ -105,12 +114,10 @@ Page({
     try {
       const openid = this.data.userInfo.openid;
 
-      await db.collection('users').doc(openid).update({
-        data: {
-          name: this.data.formData.name.trim(),
-          avatar: this.data.formData.avatar || '',
-          bio: this.data.formData.bio || ''
-        }
+      await userAPI.updateUser(openid, {
+        name: this.data.formData.name.trim(),
+        avatar: this.data.formData.avatar || '',
+        role: this.data.userInfo.role || 'user'
       });
 
       // 更新全局数据
