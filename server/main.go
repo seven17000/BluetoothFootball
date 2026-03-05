@@ -41,6 +41,9 @@ func main() {
 		c.Next()
 	})
 
+	// 静态文件服务（上传的文件）
+	r.Static("/uploads", "./uploads")
+
 	// API路由组
 	api := r.Group("/api")
 	{
@@ -94,6 +97,10 @@ func main() {
 		api.GET("/stats/season", handlers.GetSeasonStats)
 		api.GET("/stats/top_scorers", handlers.GetTopScorers)
 		api.GET("/stats/top_assists", handlers.GetTopAssists)
+
+		// 文件上传
+		api.POST("/upload/avatar", handlers.UploadAvatar)
+		api.POST("/upload/team_photo", handlers.UploadTeamPhoto)
 	}
 
 	// 启动服务器
