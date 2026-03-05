@@ -49,7 +49,7 @@ func GetPlayers(c *gin.Context) {
 	page := c.DefaultQuery("page", "1")
 	pageSize := c.DefaultQuery("pageSize", "20")
 
-	query := "SELECT id, name, number, position, join_date, gender, age, height, weight, avatar, tags, ability, is_active FROM players WHERE 1=1"
+	query := "SELECT id, name, number, position, is_active, tags, ability, join_date, gender, age, height, weight, avatar, create_time, update_time FROM players WHERE 1=1"
 	args := []interface{}{}
 
 	if isActive != "" {
@@ -77,9 +77,9 @@ func GetPlayers(c *gin.Context) {
 	var players []models.Player
 	for rows.Next() {
 		var player models.Player
-		err := rows.Scan(&player.ID, &player.Name, &player.Number, &player.Position, &player.JoinDate,
-			&player.Gender, &player.Age, &player.Height, &player.Weight, &player.Avatar,
-			&player.Tags, &player.Ability, &player.IsActive)
+		err := rows.Scan(&player.ID, &player.Name, &player.Number, &player.Position, &player.IsActive,
+			&player.Tags, &player.Ability, &player.JoinDate, &player.Gender, &player.Age, &player.Height, &player.Weight, &player.Avatar,
+			&player.CreateTime, &player.UpdateTime)
 		if err != nil {
 			fmt.Printf("Scan error: %v\n", err)
 			continue
@@ -96,11 +96,11 @@ func GetPlayer(c *gin.Context) {
 
 	var player models.Player
 	err := database.DB.QueryRow(
-		"SELECT id, name, number, position, join_date, gender, age, height, weight, avatar, tags, ability, is_active FROM players WHERE id = ?",
+		"SELECT id, name, number, position, is_active, tags, ability, join_date, gender, age, height, weight, avatar, create_time, update_time FROM players WHERE id = ?",
 		id,
-	).Scan(&player.ID, &player.Name, &player.Number, &player.Position, &player.JoinDate,
-		&player.Gender, &player.Age, &player.Height, &player.Weight, &player.Avatar,
-		&player.Tags, &player.Ability, &player.IsActive)
+	).Scan(&player.ID, &player.Name, &player.Number, &player.Position, &player.IsActive,
+		&player.Tags, &player.Ability, &player.IsActive, &player.Gender, &player.Age,
+		&player.Height, &player.Weight, &player.Avatar, &player.CreateTime, &player.UpdateTime)
 
 	if err == sql.ErrNoRows {
 		Error(c, 404, "Player not found")
@@ -209,7 +209,7 @@ func GetMatches(c *gin.Context) {
 	season := c.Query("season")
 	limit := c.DefaultQuery("limit", "20")
 
-	query := "SELECT id, opponent, goals, conceded, schedule_date, schedule_time, is_home, location, season, jersey_color, opponent_jersey, notes FROM matches"
+	query := "SELECT id, match_date, opponent, goals, conceded, result, is_home, season, location, match_time, jersey_color, opponent_jersey, attendance_players, goal_records, assist_records, notes, create_time, update_time FROM matches"
 	args := []interface{}{}
 
 	if season != "" {
@@ -232,9 +232,9 @@ func GetMatches(c *gin.Context) {
 	var matches []models.Match
 	for rows.Next() {
 		var match models.Match
-		err := rows.Scan(&match.ID, &match.Opponent, &match.Goals, &match.Conceded, &match.ScheduleDate,
-			&match.ScheduleTime, &match.IsHome, &match.Location, &match.Season,
-			&match.JerseyColor, &match.OpponentJersey, &match.Notes)
+		err := rows.Scan(&match.ID, &match.MatchDate, &match.Opponent, &match.Goals, &match.Conceded,
+			&match.Result, &match.IsHome, &match.Season, &match.Location, &match.MatchTime,
+			&match.JerseyColor, &match.OpponentJersey, &match.AttendancePlayers, &match.GoalRecords, &match.AssistRecords, &match.Notes, &match.CreateTime, &match.UpdateTime)
 		if err != nil {
 			fmt.Printf("Scan error: %v\n", err)
 			continue
@@ -251,11 +251,11 @@ func GetMatch(c *gin.Context) {
 
 	var match models.Match
 	err := database.DB.QueryRow(
-		"SELECT id, opponent, goals, conceded, schedule_date, schedule_time, is_home, location, season, jersey_color, opponent_jersey, notes FROM matches WHERE id = ?",
+		"SELECT id, match_date, opponent, goals, conceded, result, is_home, season, location, match_time, jersey_color, opponent_jersey, attendance_players, goal_records, assist_records, notes, create_time, update_time FROM matches WHERE id = ?",
 		id,
 	).Scan(&match.ID, &match.Opponent, &match.Goals, &match.Conceded, &match.ScheduleDate,
-		&match.ScheduleTime, &match.IsHome, &match.Location, &match.Season,
-		&match.JerseyColor, &match.OpponentJersey, &match.Notes)
+		&match.Result, &match.IsHome, &match.Season, &match.Location, &match.MatchTime,
+		&match.JerseyColor, &match.OpponentJersey, &match.AttendancePlayers, &match.GoalRecords, &match.AssistRecords, &match.Notes, &match.CreateTime, &match.UpdateTime)
 
 	if err == sql.ErrNoRows {
 		Error(c, 404, "Match not found")
@@ -341,7 +341,7 @@ func DeleteMatch(c *gin.Context) {
 // GetMatchRecords 获取比赛记录列表
 func GetMatchRecords(c *gin.Context) {
 	rows, err := database.DB.Query(
-		"SELECT id, player_id, match_id, goals, assists, yellow_cards, red_cards, minutes_played, rating FROM match_records",
+		"SELECT id, match_id, match_date, opponent, goal_stats, assist_stats, create_time FROM match_records",
 	)
 	if err != nil {
 		Error(c, 500, "Failed to query match records")
@@ -352,8 +352,8 @@ func GetMatchRecords(c *gin.Context) {
 	var records []models.MatchRecord
 	for rows.Next() {
 		var record models.MatchRecord
-		err := rows.Scan(&record.ID, &record.PlayerID, &record.MatchID, &record.Goals,
-			&record.Assists, &record.YellowCards, &record.RedCards, &record.MinutesPlayed, &record.Rating)
+		err := rows.Scan(&record.ID, &record.MatchID, &record.MatchDate, &record.Opponent,
+			&record.GoalStats, &record.AssistStats, &record.CreateTime)
 		if err != nil {
 			continue
 		}
@@ -368,7 +368,7 @@ func GetMatchRecordsByMatch(c *gin.Context) {
 	matchID := c.Param("matchId")
 
 	rows, err := database.DB.Query(
-		"SELECT id, player_id, match_id, goals, assists, yellow_cards, red_cards, minutes_played, rating FROM match_records WHERE match_id = ?",
+		"SELECT id, match_id, match_date, opponent, goal_stats, assist_stats, create_time FROM match_records WHERE match_id = ?",
 		matchID,
 	)
 	if err != nil {
@@ -380,8 +380,8 @@ func GetMatchRecordsByMatch(c *gin.Context) {
 	var records []models.MatchRecord
 	for rows.Next() {
 		var record models.MatchRecord
-		err := rows.Scan(&record.ID, &record.PlayerID, &record.MatchID, &record.Goals,
-			&record.Assists, &record.YellowCards, &record.RedCards, &record.MinutesPlayed, &record.Rating)
+		err := rows.Scan(&record.ID, &record.MatchID, &record.MatchDate, &record.Opponent,
+			&record.GoalStats, &record.AssistStats, &record.CreateTime)
 		if err != nil {
 			continue
 		}
@@ -396,7 +396,7 @@ func GetMatchRecordsByPlayer(c *gin.Context) {
 	playerID := c.Param("playerId")
 
 	rows, err := database.DB.Query(
-		"SELECT id, player_id, match_id, goals, assists, yellow_cards, red_cards, minutes_played, rating FROM match_records WHERE player_id = ?",
+		"SELECT id, match_id, match_date, opponent, goal_stats, assist_stats, create_time FROM match_records WHERE player_id = ?",
 		playerID,
 	)
 	if err != nil {
@@ -408,8 +408,8 @@ func GetMatchRecordsByPlayer(c *gin.Context) {
 	var records []models.MatchRecord
 	for rows.Next() {
 		var record models.MatchRecord
-		err := rows.Scan(&record.ID, &record.PlayerID, &record.MatchID, &record.Goals,
-			&record.Assists, &record.YellowCards, &record.RedCards, &record.MinutesPlayed, &record.Rating)
+		err := rows.Scan(&record.ID, &record.MatchID, &record.MatchDate, &record.Opponent,
+			&record.GoalStats, &record.AssistStats, &record.CreateTime)
 		if err != nil {
 			continue
 		}
@@ -434,8 +434,8 @@ func CreateMatchRecord(c *gin.Context) {
 	_, err := database.DB.Exec(
 		`INSERT INTO match_records (id, player_id, match_id, goals, assists, yellow_cards, red_cards, minutes_played, rating)
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-		record.ID, record.PlayerID, record.MatchID, record.Goals, record.Assists,
-		record.YellowCards, record.RedCards, record.MinutesPlayed, record.Rating,
+		record.ID, record.MatchID, record.MatchDate, record.Opponent, record.GoalStats,
+		record.AssistStats, record.CreateTime,
 	)
 
 	if err != nil {
@@ -458,8 +458,8 @@ func UpdateMatchRecord(c *gin.Context) {
 
 	_, err := database.DB.Exec(
 		`UPDATE match_records SET player_id=?, match_id=?, goals=?, assists=?, yellow_cards=?, red_cards=?, minutes_played=?, rating=? WHERE id=?`,
-		record.PlayerID, record.MatchID, record.Goals, record.Assists,
-		record.YellowCards, record.RedCards, record.MinutesPlayed, record.Rating, id,
+		record.ID, record.MatchID, record.MatchDate, record.Opponent, record.GoalStats,
+		record.AssistStats, record.CreateTime, id,
 	)
 
 	if err != nil {
@@ -489,7 +489,7 @@ func DeleteMatchRecord(c *gin.Context) {
 // GetSchedules 获取赛程列表
 func GetSchedules(c *gin.Context) {
 	rows, err := database.DB.Query(
-		"SELECT id, opponent, date, is_home, location, notes, jersey_color, opponent_jersey FROM schedules ORDER BY date ASC",
+		"SELECT id, openid, date, opponent, is_home, jersey_color, opponent_jersey, location, notes, create_time, update_time FROM schedules ORDER BY date ASC",
 	)
 	if err != nil {
 		Error(c, 500, "Failed to query schedules")
@@ -500,7 +500,7 @@ func GetSchedules(c *gin.Context) {
 	var schedules []models.Schedule
 	for rows.Next() {
 		var schedule models.Schedule
-		err := rows.Scan(&schedule.ID, &schedule.Opponent, &schedule.Date, &schedule.IsHome,
+		err := rows.Scan(&schedule.ID, &schedule.OpenID, &schedule.Date, &schedule.Opponent, &schedule.IsHome,
 			&schedule.Location, &schedule.Notes, &schedule.JerseyColor, &schedule.OpponentJersey)
 		if err != nil {
 			continue
@@ -517,9 +517,9 @@ func GetSchedule(c *gin.Context) {
 
 	var schedule models.Schedule
 	err := database.DB.QueryRow(
-		"SELECT id, opponent, date, is_home, location, notes, jersey_color, opponent_jersey FROM schedules WHERE id = ?",
+		"SELECT id, openid, date, opponent, is_home, jersey_color, opponent_jersey, location, notes, create_time, update_time FROM schedules WHERE id = ?",
 		id,
-	).Scan(&schedule.ID, &schedule.Opponent, &schedule.Date, &schedule.IsHome,
+	).Scan(&schedule.ID, &schedule.OpenID, &schedule.Date, &schedule.Opponent, &schedule.IsHome,
 		&schedule.Location, &schedule.Notes, &schedule.JerseyColor, &schedule.OpponentJersey)
 
 	if err == sql.ErrNoRows {
@@ -606,7 +606,7 @@ func GetAttendance(c *gin.Context) {
 	scheduleID := c.Query("scheduleId")
 	playerID := c.Query("playerId")
 
-	query := "SELECT id, player_id, schedule_id, status, reason FROM attendance WHERE 1=1"
+	query := "SELECT id, player_id, player_name, date, type, status, remark, match_id, schedule_id, present_players, absent_players, openid, create_time FROM attendance WHERE 1=1"
 	args := []interface{}{}
 
 	if scheduleID != "" {
@@ -628,7 +628,9 @@ func GetAttendance(c *gin.Context) {
 	var records []models.Attendance
 	for rows.Next() {
 		var record models.Attendance
-		err := rows.Scan(&record.ID, &record.PlayerID, &record.ScheduleID, &record.Status, &record.Reason)
+		err := rows.Scan(&record.ID, &record.PlayerID, &record.PlayerName, &record.Date, &record.Type,
+		&record.Status, &record.Remark, &record.MatchID, &record.ScheduleID, &record.PresentPlayers,
+		&record.AbsentPlayers, &record.OpenID, &record.CreateTime)
 		if err != nil {
 			continue
 		}
@@ -653,7 +655,7 @@ func CreateAttendance(c *gin.Context) {
 	_, err := database.DB.Exec(
 		`INSERT INTO attendance (id, player_id, schedule_id, status, reason)
 		VALUES (?, ?, ?, ?, ?)`,
-		record.ID, record.PlayerID, record.ScheduleID, record.Status, record.Reason,
+		record.ID, record.PlayerID, record.ScheduleID, record.Status, record.Remark,
 	)
 
 	if err != nil {
@@ -676,7 +678,7 @@ func UpdateAttendance(c *gin.Context) {
 
 	_, err := database.DB.Exec(
 		`UPDATE attendance SET player_id=?, schedule_id=?, status=?, reason=? WHERE id=?`,
-		record.PlayerID, record.ScheduleID, record.Status, record.Reason, id,
+		record.PlayerID, record.ScheduleID, record.Status, record.Remark, id,
 	)
 
 	if err != nil {
@@ -709,9 +711,9 @@ func GetUser(c *gin.Context) {
 
 	var user models.User
 	err := database.DB.QueryRow(
-		"SELECT openid, nickname, avatar, role FROM users WHERE openid = ?",
+		"SELECT id, openid, name, avatar, role, create_time, last_login_time FROM users WHERE openid = ?",
 		openid,
-	).Scan(&user.OpenID, &user.Nickname, &user.Avatar, &user.Role)
+	).Scan(&user.ID, &user.OpenID, &user.Name, &user.Avatar, &user.Role, &user.CreateTime, &user.LastLoginTime)
 
 	if err == sql.ErrNoRows {
 		Error(c, 404, "User not found")
@@ -735,7 +737,7 @@ func CreateUser(c *gin.Context) {
 
 	_, err := database.DB.Exec(
 		`INSERT INTO users (openid, nickname, avatar, role) VALUES (?, ?, ?, ?)`,
-		user.OpenID, user.Nickname, user.Avatar, user.Role,
+		user.OpenID, user.Name, user.Avatar, user.Role,
 	)
 
 	if err != nil {
@@ -758,7 +760,7 @@ func UpdateUser(c *gin.Context) {
 
 	_, err := database.DB.Exec(
 		`UPDATE users SET nickname=?, avatar=?, role=? WHERE openid=?`,
-		user.Nickname, user.Avatar, user.Role, openid,
+		user.Name, user.Avatar, user.Role, openid,
 	)
 
 	if err != nil {
@@ -774,7 +776,7 @@ func UpdateUser(c *gin.Context) {
 
 // GetTeamPhotos 获取球队照片
 func GetTeamPhotos(c *gin.Context) {
-	rows, err := database.DB.Query("SELECT id, url, create_time FROM team_photos ORDER BY create_time DESC")
+	rows, err := database.DB.Query("SELECT id, openid, file_id, created_at FROM team_photos ORDER BY created_at DESC")
 	if err != nil {
 		Error(c, 500, "Failed to query team photos")
 		return
@@ -784,7 +786,7 @@ func GetTeamPhotos(c *gin.Context) {
 	var photos []models.TeamPhoto
 	for rows.Next() {
 		var photo models.TeamPhoto
-		err := rows.Scan(&photo.ID, &photo.URL, &photo.CreateTime)
+		err := rows.Scan(&photo.ID, &photo.OpenID, &photo.FileID, &photo.CreatedAt)
 		if err != nil {
 			continue
 		}
@@ -808,7 +810,7 @@ func CreateTeamPhoto(c *gin.Context) {
 
 	_, err := database.DB.Exec(
 		`INSERT INTO team_photos (id, url) VALUES (?, ?)`,
-		photo.ID, photo.URL,
+		photo.ID, photo.FileID,
 	)
 
 	if err != nil {

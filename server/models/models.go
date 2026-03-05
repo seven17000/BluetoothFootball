@@ -2,101 +2,111 @@ package models
 
 import (
 	"encoding/json"
-	"time"
 )
 
 // Player 球员模型
 type Player struct {
 	ID        string          `json:"_id,omitempty"`
 	Name      string          `json:"name"`
-	Number    string          `json:"number"`
-	Position  json.RawMessage `json:"position"` // 存储为JSON数组
-	JoinDate  string          `json:"joinDate"`
-	Gender    string          `json:"gender"`
-	Age       int            `json:"age"`
-	Height    int            `json:"height"`
-	Weight    int            `json:"weight"`
-	Avatar    string          `json:"avatar"`
-	Tags      json.RawMessage `json:"tags"` // 存储为JSON数组
+	Number    float64         `json:"number"`
+	Position  json.RawMessage `json:"position"`
+	IsActive  int            `json:"isActive"`
+	Tags      json.RawMessage `json:"tags"`
 	Ability   json.RawMessage `json:"ability"`
-	IsActive  bool           `json:"isActive"`
-	CreateTime time.Time     `json:"createTime"`
-	UpdateTime time.Time     `json:"updateTime"`
+	JoinDate  string         `json:"joinDate"`
+	Gender    string         `json:"gender"`
+	Age       int            `json:"age"`
+	Height    float64        `json:"height"`
+	Weight    string         `json:"weight"`
+	Avatar    string         `json:"avatar"`
+	CreateTime string        `json:"createTime"`
+	UpdateTime string        `json:"updateTime"`
 }
 
 // Match 比赛模型
 type Match struct {
-	ID              string    `json:"_id,omitempty"`
-	Opponent        string    `json:"opponent"`
-	Goals           int       `json:"goals"`
-	Conceded        int       `json:"conceded"`
-	ScheduleDate    string    `json:"scheduleDate"`
-	ScheduleTime    string    `json:"scheduleTime"`
-	IsHome         bool      `json:"isHome"`
-	Location       string    `json:"location"`
-	Season         string    `json:"season"`
-	JerseyColor    string    `json:"jerseyColor"`
-	OpponentJersey string    `json:"opponentJersey"`
-	Notes          string    `json:"notes"`
-	CreateTime     time.Time `json:"createTime"`
-	UpdateTime     time.Time `json:"updateTime"`
+	ID                string         `json:"_id,omitempty"`
+	MatchDate         string         `json:"matchDate"`
+	Opponent          string         `json:"opponent"`
+	Goals             int            `json:"goals"`
+	Conceded          int            `json:"conceded"`
+	Result            string         `json:"result"`
+	IsHome            int            `json:"isHome"`
+	Season            string         `json:"season"`
+	Location          string         `json:"location"`
+	MatchTime         string         `json:"matchTime"`
+	ScheduleDate      string         `json:"scheduleDate"`
+	ScheduleTime      string         `json:"scheduleTime"`
+	JerseyColor       string         `json:"jerseyColor"`
+	OpponentJersey    string         `json:"opponentJersey"`
+	AttendancePlayers string         `json:"attendancePlayers"`
+	GoalRecords       json.RawMessage `json:"goalRecords"`
+	AssistRecords     json.RawMessage `json:"assistRecords"`
+	Notes             string         `json:"notes"`
+	CreateTime        string         `json:"createTime"`
+	UpdateTime        string         `json:"updateTime"`
 }
 
 // MatchRecord 比赛记录模型
 type MatchRecord struct {
-	ID            string    `json:"_id,omitempty"`
-	PlayerID      string    `json:"playerId"`
-	MatchID       string    `json:"matchId"`
-	Goals         int       `json:"goals"`
-	Assists       int       `json:"assists"`
-	YellowCards   int       `json:"yellowCards"`
-	RedCards      int       `json:"redCards"`
-	MinutesPlayed int       `json:"minutesPlayed"`
-	Rating        float64   `json:"rating"`
-	CreateTime   time.Time `json:"createTime"`
-	UpdateTime   time.Time `json:"updateTime"`
+	ID          string         `json:"_id,omitempty"`
+	MatchID     string         `json:"matchId"`
+	MatchDate   string         `json:"matchDate"`
+	Opponent    string         `json:"opponent"`
+	GoalStats   json.RawMessage `json:"goalStats"`
+	AssistStats json.RawMessage `json:"assistStats"`
+	CreateTime  string         `json:"createTime"`
 }
 
 // Schedule 赛程模型
 type Schedule struct {
-	ID              string    `json:"_id,omitempty"`
-	Opponent        string    `json:"opponent"`
-	Date            string    `json:"date"`
-	IsHome         bool      `json:"isHome"`
-	Location       string    `json:"location"`
-	Notes          string    `json:"notes"`
-	JerseyColor    string    `json:"jerseyColor"`
-	OpponentJersey string    `json:"opponentJersey"`
-	CreateTime     time.Time `json:"createTime"`
-	UpdateTime     time.Time `json:"updateTime"`
+	ID              string         `json:"_id,omitempty"`
+	OpenID          string         `json:"openid"`
+	Date            string         `json:"date"`
+	Opponent        string         `json:"opponent"`
+	IsHome          int            `json:"isHome"`
+	JerseyColor     string         `json:"jerseyColor"`
+	OpponentJersey  string         `json:"opponentJersey"`
+	Location        string         `json:"location"`
+	Notes           string         `json:"notes"`
+	CreateTime      string         `json:"createTime"`
+	UpdateTime      string         `json:"updateTime"`
 }
 
 // Attendance 考勤模型
 type Attendance struct {
-	ID         string    `json:"_id,omitempty"`
-	PlayerID   string    `json:"playerId"`
-	ScheduleID string    `json:"scheduleId,omitempty"`
-	Status     string    `json:"status"` // 参加/请假/缺席
-	Reason     string    `json:"reason"`
-	CreateTime time.Time `json:"createTime"`
-	UpdateTime time.Time `json:"updateTime"`
+	ID             string `json:"_id,omitempty"`
+	PlayerID       string `json:"playerId,omitempty"`
+	PlayerName     string `json:"playerName,omitempty"`
+	Date           string `json:"date"`
+	Type           string `json:"type"`
+	Status         string `json:"status"`
+	Remark         string `json:"remark"`
+	MatchID        string `json:"matchId,omitempty"`
+	ScheduleID     string `json:"scheduleId,omitempty"`
+	PresentPlayers string `json:"presentPlayers,omitempty"`
+	AbsentPlayers  string `json:"absentPlayers,omitempty"`
+	OpenID         string `json:"openid,omitempty"`
+	CreateTime     string `json:"createTime"`
 }
 
 // User 用户模型
 type User struct {
-	OpenID    string    `json:"_id,omitempty"`
-	Nickname  string    `json:"nickname"`
-	Avatar    string    `json:"avatar"`
-	Role      string    `json:"role"` // admin/user
-	CreateTime time.Time `json:"createTime"`
-	UpdateTime time.Time `json:"updateTime"`
+	ID            string `json:"_id,omitempty"`
+	OpenID        string `json:"openid"`
+	Name          string `json:"name"`
+	Avatar        string `json:"avatar"`
+	Role          string `json:"role"`
+	CreateTime    string `json:"createTime"`
+	LastLoginTime string `json:"lastLoginTime"`
 }
 
 // TeamPhoto 球队照片模型
 type TeamPhoto struct {
-	ID         string    `json:"_id,omitempty"`
-	URL        string    `json:"url"`
-	CreateTime time.Time `json:"createTime"`
+	ID         string `json:"_id,omitempty"`
+	OpenID     string `json:"openid"`
+	FileID     string `json:"fileId"`
+	CreatedAt  string `json:"createdAt"`
 }
 
 // SeasonStats 赛季统计数据

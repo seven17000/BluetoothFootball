@@ -44,16 +44,22 @@ func InitDB() error {
 	config := GetConfig()
 
 	// 设置时区
-	loc, err := time.LoadLocation("Asia/Shanghai")
+	_ , err := time.LoadLocation("Asia/Shanghai")
 	if err != nil {
 		log.Printf("Warning: Failed to load timezone: %v", err)
 	}
 
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Asia/Shanghai",
-		config.User, config.Password, config.Host, config.Port, config.Database)
+	password := config.Password
+	if password == "" {
+		password = ""
+	}
 
-	log.Printf("Connecting to database: %s:%s/%s", config.Host, config.Port, config.Database)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Asia%%2FShanghai",
+		config.User, password, config.Host, config.Port, config.Database)
 
+	log.Printf("Connecting to database: %s:%s/%s, user=%s, password=%s", config.Host, config.Port, config.Database, config.User, config.Password)
+
+	log.Printf("DSN: %s", dsn)
 	DB, err = sql.Open("mysql", dsn)
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
