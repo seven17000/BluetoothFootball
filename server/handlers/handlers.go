@@ -489,7 +489,7 @@ func DeleteMatchRecord(c *gin.Context) {
 // GetSchedules 获取赛程列表
 func GetSchedules(c *gin.Context) {
 	rows, err := database.DB.Query(
-		"SELECT id, openid, date, opponent, is_home, jersey_color, opponent_jersey, location, notes, create_time, update_time FROM schedules ORDER BY date ASC",
+		"SELECT id, IFNULL(openid, '') as openid, IFNULL(date, '') as date, IFNULL(opponent, '') as opponent, is_home, IFNULL(jersey_color, '') as jersey_color, IFNULL(opponent_jersey, '') as opponent_jersey, IFNULL(location, '') as location, IFNULL(notes, '') as notes, IFNULL(create_time, '') as create_time, IFNULL(update_time, '') as update_time FROM schedules ORDER BY date ASC",
 	)
 	if err != nil {
 		Error(c, 500, "Failed to query schedules")
@@ -497,11 +497,12 @@ func GetSchedules(c *gin.Context) {
 	}
 	defer rows.Close()
 
-	var schedules []models.Schedule
+	schedules := []models.Schedule{}
 	for rows.Next() {
 		var schedule models.Schedule
 		err := rows.Scan(&schedule.ID, &schedule.OpenID, &schedule.Date, &schedule.Opponent, &schedule.IsHome,
-			&schedule.Location, &schedule.Notes, &schedule.JerseyColor, &schedule.OpponentJersey)
+			&schedule.JerseyColor, &schedule.OpponentJersey, &schedule.Location, &schedule.Notes, 
+			&schedule.CreateTime, &schedule.UpdateTime)
 		if err != nil {
 			continue
 		}
@@ -606,7 +607,7 @@ func GetAttendance(c *gin.Context) {
 	scheduleID := c.Query("scheduleId")
 	playerID := c.Query("playerId")
 
-	query := "SELECT id, player_id, player_name, date, type, status, remark, match_id, schedule_id, present_players, absent_players, openid, create_time FROM attendance WHERE 1=1"
+	query := "SELECT id, player_id, player_name, date, attendance_type, status, remark, match_id, schedule_id, present_players, absent_players, openid, create_time FROM attendance WHERE 1=1"
 	args := []interface{}{}
 
 	if scheduleID != "" {
@@ -625,7 +626,7 @@ func GetAttendance(c *gin.Context) {
 	}
 	defer rows.Close()
 
-	var records []models.Attendance
+	records := []models.Attendance{}
 	for rows.Next() {
 		var record models.Attendance
 		err := rows.Scan(&record.ID, &record.PlayerID, &record.PlayerName, &record.Date, &record.Type,
