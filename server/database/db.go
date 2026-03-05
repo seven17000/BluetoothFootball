@@ -28,7 +28,7 @@ func GetConfig() Config {
 		Port:     getEnv("DB_PORT", "3306"),
 		User:     getEnv("DB_USER", "root"),
 		Password: getEnv("DB_PASSWORD", ""),
-		Database: getEnv("DB_NAME", "bluetooth_football"),
+		Database: getEnv("DB_NAME", "football_team"),
 	}
 }
 

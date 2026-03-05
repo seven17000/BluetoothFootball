@@ -607,7 +607,7 @@ func GetAttendance(c *gin.Context) {
 	scheduleID := c.Query("scheduleId")
 	playerID := c.Query("playerId")
 
-	query := "SELECT id, player_id, player_name, date, attendance_type, status, remark, match_id, schedule_id, present_players, absent_players, openid, create_time FROM attendance WHERE 1=1"
+	query := "SELECT id, player_id, player_name, date, attendance_type AS type, status, remark, match_id, schedule_id, present_players, absent_players, openid, create_time FROM attendance WHERE 1=1"
 	args := []interface{}{}
 
 	if scheduleID != "" {
