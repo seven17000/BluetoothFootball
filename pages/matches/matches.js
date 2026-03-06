@@ -35,7 +35,7 @@ Page({
   async loadSeasons() {
     try {
       const res = await matchAPI.getMatches({ limit: 100 });
-      const allMatches = res.data || [];
+      const allMatches = res || [];
 
       // 提取所有唯一赛季
       const seasonsMap = {};
@@ -85,7 +85,7 @@ Page({
 
       // 获取所有比赛
       const res = await matchAPI.getMatches({ season: selectedSeason === '全部' ? '' : selectedSeason, limit: 100 });
-      let allMatches = res.data || [];
+      let allMatches = res || [];
 
       // 过滤已完成的比赛（有result结果）
       allMatches = allMatches.filter(m => m.result && ['胜', '平', '负'].includes(String(m.result).trim()));

@@ -108,7 +108,7 @@ Page({
   async loadCurrentSeason() {
     try {
       const res = await matchAPI.getMatches({ limit: 1 });
-      const matches = res.data || [];
+      const matches = res || [];
 
       let latestSeason = '';
       if (matches.length > 0 && matches[0].season) {

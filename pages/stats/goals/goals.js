@@ -51,7 +51,7 @@ Page({
   async loadSeasons() {
     try {
       const res = await matchAPI.getMatches({ limit: 100 });
-      const allMatches = res.data || [];
+      const allMatches = res || [];
 
       // 提取所有唯一赛季
       const seasonsMap = {};
@@ -90,7 +90,7 @@ Page({
 
       // 获取符合条件的比赛
       const res = await matchAPI.getMatches({ season: selectedSeason === '全部' ? '' : selectedSeason, limit: 100 });
-      const allMatches = res.data || [];
+      const allMatches = res || [];
 
       // 过滤有结果的比赛
       const finishedMatches = allMatches.filter(m => m.result && ['胜', '平', '负'].includes(String(m.result).trim()));
@@ -169,17 +169,17 @@ Page({
       let rankList = [];
       if (currentTab === 'goals') {
         const res = await statsAPI.getTopScorers(20);
-        rankList = res.data || [];
+        rankList = res || [];
       } else {
         const res = await statsAPI.getTopAssists(20);
-        rankList = res.data || [];
+        rankList = res || [];
       }
 
       // 处理球员信息
       if (rankList.length > 0) {
         const playerIds = rankList.map(r => r.playerId);
         const playersRes = await playerAPI.getPlayers();
-        const players = playersRes.data || [];
+        const players = playersRes || [];
 
         const playerMap = {};
         players.forEach(p => {
@@ -194,7 +194,7 @@ Page({
             position: player.position ? (Array.isArray(player.position) ? player.position.join(' / ') : player.position) : '',
             avatar: player.avatar || '',
             number: player.number || '',
-            value: item.totalGoals || item.totalAssists || 0
+            value: item.totalGoals || item.totalAssists || item.goals || item.assists || 0
           };
         });
       }
@@ -227,7 +227,7 @@ Page({
 
       // 获取比赛列表
       const res = await matchAPI.getMatches({ season: selectedSeason === '全部' ? '' : selectedSeason, limit: 100 });
-      const allMatches = res.data || [];
+      const allMatches = res || [];
 
       // 按日期降序排序
       allMatches.sort((a, b) => {

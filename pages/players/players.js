@@ -45,7 +45,7 @@ Page({
 
     try {
       // 获取球员列表（由于后端暂时不支持复杂筛选，先获取全部）
-      const players = await playerAPI.getPlayers({ isActive: true });
+      const players = await playerAPI.getPlayers({ isActive: true, pageSize: 100 });
 
       const newPlayers = (players || []).map(player => {
         // 确保 position 是数组（兼容旧的 positions 字段）

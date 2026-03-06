@@ -57,13 +57,13 @@ Page({
   async loadPlayerRecords() {
     try {
       const recordsRes = await matchRecordAPI.getMatchRecordsByMatch(this.data.matchId);
-      const records = recordsRes.data || [];
+      const records = recordsRes || [];
 
       if (records.length > 0) {
         // 获取所有球员ID
         const playerIds = records.map(r => r.playerId);
         const playersRes = await playerAPI.getPlayers();
-        const players = playersRes.data || [];
+        const players = playersRes || [];
 
         const playerMap = {};
         players.forEach(p => {

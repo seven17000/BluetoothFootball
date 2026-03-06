@@ -92,7 +92,7 @@ Page({
   async loadPlayers() {
     try {
       const res = await playerAPI.getPlayers();
-      const players = res.data || [];
+      const players = res || [];
       this.setData({ players });
     } catch (error) {
       console.error('加载球员失败', error);

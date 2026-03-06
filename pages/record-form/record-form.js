@@ -41,7 +41,7 @@ Page({
   async loadPlayers() {
     try {
       const res = await playerAPI.getPlayers({ isActive: true });
-      const players = res.data || [];
+      const players = res || [];
 
       this.setData({ players });
 
@@ -56,7 +56,7 @@ Page({
   async loadExistingRecords() {
     try {
       const res = await matchRecordAPI.getMatchRecordsByMatch(this.data.matchId);
-      const records = res.data || [];
+      const records = res || [];
 
       const existingRecords = {};
       records.forEach(record => {

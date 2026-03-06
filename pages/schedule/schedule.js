@@ -27,7 +27,7 @@ Page({
 
     try {
       const res = await scheduleAPI.getSchedules();
-      const schedulesData = res.data || [];
+      const schedulesData = res || [];
 
       // 客户端过滤未来赛程（避免时区问题）
       const nowTime = Date.now();

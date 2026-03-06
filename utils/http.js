@@ -3,7 +3,7 @@ const app = getApp();
 
 // API基础URL - 需要根据实际情况修改
 // 开发环境使用localhost，真机调试需要改成实际服务器IP
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL = 'https://www.bluetoothfc.asia/api';
 
 /**
  * 辅助函数：构建查询字符串
