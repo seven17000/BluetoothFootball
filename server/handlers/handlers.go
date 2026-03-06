@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -30,7 +31,13 @@ func Success(c *gin.Context, data interface{}) {
 
 // Error 返回错误响应
 func Error(c *gin.Context, code int, message string) {
-	c.JSON(http.StatusBadRequest, Response{
+	status := http.StatusInternalServerError
+	if code >= 400 && code < 500 {
+		status = http.StatusBadRequest
+	} else if code >= 300 && code < 400 {
+		status = http.StatusFound
+	}
+	c.JSON(status, Response{
 		Code:    code,
 		Message: message,
 	})
@@ -96,10 +103,10 @@ func GetPlayer(c *gin.Context) {
 
 	var player models.Player
 	err := database.DB.QueryRow(
-		"SELECT id, name, number, position, is_active, tags, ability, join_date, gender, age, height, weight, avatar, create_time, update_time FROM players WHERE id = ?",
+		"SELECT id, name, number, position, is_active, tags, ability, COALESCE(join_date, ''), COALESCE(gender, ''), age, height, COALESCE(weight, ''), avatar, COALESCE(create_time, ''), COALESCE(update_time, '') FROM players WHERE id = ?",
 		id,
 	).Scan(&player.ID, &player.Name, &player.Number, &player.Position, &player.IsActive,
-		&player.Tags, &player.Ability, &player.IsActive, &player.Gender, &player.Age,
+		&player.Tags, &player.Ability, &player.JoinDate, &player.Gender, &player.Age,
 		&player.Height, &player.Weight, &player.Avatar, &player.CreateTime, &player.UpdateTime)
 
 	if err == sql.ErrNoRows {
@@ -107,7 +114,7 @@ func GetPlayer(c *gin.Context) {
 		return
 	}
 	if err != nil {
-		Error(c, 500, "Failed to get player")
+		Error(c, 500, "Failed to get player: " + err.Error())
 		return
 	}
 
@@ -209,7 +216,7 @@ func GetMatches(c *gin.Context) {
 	season := c.Query("season")
 	limit := c.DefaultQuery("limit", "20")
 
-	query := "SELECT id, match_date, opponent, goals, conceded, result, is_home, season, location, match_time, jersey_color, opponent_jersey, attendance_players, goal_records, assist_records, notes, create_time, update_time FROM matches"
+	query := "SELECT id, COALESCE(match_date, ''), opponent, goals, conceded, result, is_home, COALESCE(season, ''), COALESCE(location, ''), COALESCE(match_time, ''), COALESCE(jersey_color, ''), COALESCE(opponent_jersey, ''), COALESCE(attendance_players, ''), COALESCE(goal_records, '{}'), COALESCE(assist_records, '{}'), COALESCE(notes, ''), COALESCE(create_time, ''), COALESCE(update_time, '') FROM matches"
 	args := []interface{}{}
 
 	if season != "" {
@@ -217,7 +224,7 @@ func GetMatches(c *gin.Context) {
 		args = append(args, season)
 	}
 
-	query += " ORDER BY schedule_date DESC, schedule_time DESC LIMIT ?"
+	query += " ORDER BY match_date DESC LIMIT ?"
 	var limitInt int
 	fmt.Sscanf(limit, "%d", &limitInt)
 	args = append(args, limitInt)
@@ -239,6 +246,10 @@ func GetMatches(c *gin.Context) {
 			fmt.Printf("Scan error: %v\n", err)
 			continue
 		}
+		// Fix date format
+		if match.MatchDate != "" {
+			match.MatchDate = match.MatchDate + "T00:00:00+08:00"
+		}
 		matches = append(matches, match)
 	}
 
@@ -251,10 +262,10 @@ func GetMatch(c *gin.Context) {
 
 	var match models.Match
 	err := database.DB.QueryRow(
-		"SELECT id, match_date, opponent, goals, conceded, result, is_home, season, location, match_time, jersey_color, opponent_jersey, attendance_players, goal_records, assist_records, notes, create_time, update_time FROM matches WHERE id = ?",
+		"SELECT id, COALESCE(match_date, ''), opponent, goals, conceded, result, is_home, COALESCE(season, ''), COALESCE(location, ''), COALESCE(match_time, ''), COALESCE(jersey_color, ''), COALESCE(opponent_jersey, ''), COALESCE(attendance_players, ''), COALESCE(goal_records, '{}'), COALESCE(assist_records, '{}'), COALESCE(notes, ''), COALESCE(create_time, ''), COALESCE(update_time, '') FROM matches WHERE id = ?",
 		id,
-	).Scan(&match.ID, &match.Opponent, &match.Goals, &match.Conceded, &match.ScheduleDate,
-		&match.Result, &match.IsHome, &match.Season, &match.Location, &match.MatchTime,
+	).Scan(&match.ID, &match.MatchDate, &match.Opponent, &match.Goals, &match.Conceded, &match.Result,
+		&match.IsHome, &match.Season, &match.Location, &match.MatchTime,
 		&match.JerseyColor, &match.OpponentJersey, &match.AttendancePlayers, &match.GoalRecords, &match.AssistRecords, &match.Notes, &match.CreateTime, &match.UpdateTime)
 
 	if err == sql.ErrNoRows {
@@ -262,8 +273,13 @@ func GetMatch(c *gin.Context) {
 		return
 	}
 	if err != nil {
-		Error(c, 500, "Failed to get match")
+		Error(c, 500, "Failed to get match: " + err.Error())
 		return
+	}
+	
+	// Fix date format
+	if match.MatchDate != "" {
+		match.MatchDate = match.MatchDate + "T00:00:00+08:00"
 	}
 
 	Success(c, match)
@@ -372,20 +388,91 @@ func GetMatchRecordsByMatch(c *gin.Context) {
 		matchID,
 	)
 	if err != nil {
-		Error(c, 500, "Failed to query match records")
+		Error(c, 500, "Failed to query match records: " + err.Error())
 		return
 	}
 	defer rows.Close()
 
-	var records []models.MatchRecord
+	// 获取所有球员信息
+	playerRows, _ := database.DB.Query("SELECT id, name FROM players")
+	playerNames := make(map[string]string)
+	if playerRows != nil {
+		defer playerRows.Close()
+		for playerRows.Next() {
+			var id, name string
+			playerRows.Scan(&id, &name)
+			playerNames[id] = name
+		}
+	}
+
+	re := regexp.MustCompile(`"([^"]+)":\s*([0-9.]+)`)
+
+	// 球员得分映射
+	playerGoals := make(map[string]int)
+	playerAssists := make(map[string]int)
+
 	for rows.Next() {
-		var record models.MatchRecord
-		err := rows.Scan(&record.ID, &record.MatchID, &record.MatchDate, &record.Opponent,
-			&record.GoalStats, &record.AssistStats, &record.CreateTime)
+		var id, matchID, matchDate, opponent, goalStats, assistStats, createTime sql.NullString
+		err := rows.Scan(&id, &matchID, &matchDate, &opponent, &goalStats, &assistStats, &createTime)
 		if err != nil {
 			continue
 		}
-		records = append(records, record)
+
+		// 解析进球记录
+		if goalStats.String != "" {
+			matches := re.FindAllStringSubmatch(goalStats.String, -1)
+			for _, match := range matches {
+				if len(match) >= 3 {
+					playerID := match[1]
+					var count int
+					fmt.Sscanf(match[2], "%d", &count)
+					playerGoals[playerID] += count
+				}
+			}
+		}
+
+		// 解析助攻记录
+		if assistStats.String != "" {
+			matches := re.FindAllStringSubmatch(assistStats.String, -1)
+			for _, match := range matches {
+				if len(match) >= 3 {
+					playerID := match[1]
+					var count int
+					fmt.Sscanf(match[2], "%d", &count)
+					playerAssists[playerID] += count
+				}
+			}
+		}
+	}
+
+	// 构建返回数据
+	type PlayerRecord struct {
+		PlayerID   string `json:"playerId"`
+		PlayerName string `json:"playerName"`
+		Goals      int    `json:"goals"`
+		Assists    int    `json:"assists"`
+	}
+
+	var records []PlayerRecord
+	allPlayerIDs := make(map[string]bool)
+	for id := range playerGoals {
+		allPlayerIDs[id] = true
+	}
+	for id := range playerAssists {
+		allPlayerIDs[id] = true
+	}
+
+	for playerID := range allPlayerIDs {
+		playerName := playerNames[playerID]
+		if playerName == "" {
+			playerName = "未知"
+		}
+		records = append(records, PlayerRecord{
+			PlayerID:   playerID,
+			PlayerName: playerName,
+			Goals:      playerGoals[playerID],
+			Assists:    playerAssists[playerID],
+		})
 	}
 
 	Success(c, records)
@@ -862,43 +949,89 @@ func GetSeasonStats(c *gin.Context) {
 // GetTopScorers 获取射手榜
 func GetTopScorers(c *gin.Context) {
 	limit := c.DefaultQuery("limit", "10")
-
-	query := `
-		SELECT p.id, p.name, COALESCE(SUM(mr.goals), 0) as total_goals
-		FROM players p
-		LEFT JOIN match_records mr ON p.id = mr.player_id
-		LEFT JOIN matches m ON mr.match_id = m.id
-		WHERE p.is_active = TRUE
-		GROUP BY p.id, p.name
-		HAVING total_goals > 0
-		ORDER BY total_goals DESC
-		LIMIT ?
-	`
-
-	var limitInt int
+	limitInt := 10
 	fmt.Sscanf(limit, "%d", &limitInt)
 
-	rows, err := database.DB.Query(query, limitInt)
+	// 查询所有比赛记录的进球统计
+	rows, err := database.DB.Query(`
+		SELECT goal_stats FROM match_records WHERE goal_stats IS NOT NULL
+	`)
 	if err != nil {
-		Error(c, 500, "Failed to get top scorers")
+		Error(c, 500, "Failed to get top scorers: " + err.Error())
 		return
 	}
 	defer rows.Close()
 
+	// 解析JSON汇总进球数
+	goalsMap := make(map[string]int)
+	re := regexp.MustCompile(`"([^"]+)":\s*([0-9.]+)`)
+	for rows.Next() {
+		var goalStats string
+		if err := rows.Scan(&goalStats); err != nil {
+			continue
+		}
+		matches := re.FindAllStringSubmatch(goalStats, -1)
+		for _, match := range matches {
+			if len(match) >= 3 {
+				playerID := match[1]
+				var count int
+				fmt.Sscanf(match[2], "%d", &count)
+				goalsMap[playerID] += count
+			}
+		}
+	}
+
+	// 获取球员名称
+	playerIDs := make([]string, 0, len(goalsMap))
+	for id := range goalsMap {
+		playerIDs = append(playerIDs, id)
+	}
+	playerNames := make(map[string]string)
+	if len(playerIDs) > 0 {
+		placeholders := make([]string, len(playerIDs))
+		args := make([]interface{}, len(playerIDs))
+		for i, id := range playerIDs {
+			placeholders[i] = "?"
+			args[i] = id
+		}
+		query := "SELECT id, name FROM players WHERE id IN (" + strings.Join(placeholders, ",") + ")"
+		nameRows, _ := database.DB.Query(query, args...)
+		if nameRows != nil {
+			defer nameRows.Close()
+			for nameRows.Next() {
+				var id, name string
+				nameRows.Scan(&id, &name)
+				playerNames[id] = name
+			}
+		}
+	}
+
+	// 转换为切片并排序
 	type Scorer struct {
 		ID    string `json:"id"`
 		Name  string `json:"name"`
 		Goals int    `json:"goals"`
 	}
-
 	var scorers []Scorer
-	for rows.Next() {
-		var scorer Scorer
-		err := rows.Scan(&scorer.ID, &scorer.Name, &scorer.Goals)
-		if err != nil {
-			continue
+	for id, goals := range goalsMap {
+		if goals > 0 {
+			name := playerNames[id]
+			if name == "" {
+				name = id
+			}
+			scorers = append(scorers, Scorer{ID: id, Name: name, Goals: goals})
 		}
-		scorers = append(scorers, scorer)
+	}
+	// 排序
+	for i := 0; i < len(scorers)-1; i++ {
+		for j := i + 1; j < len(scorers); j++ {
+			if scorers[j].Goals > scorers[i].Goals {
+				scorers[i], scorers[j] = scorers[j], scorers[i]
+			}
+		}
+	}
+	if limitInt < len(scorers) {
+		scorers = scorers[:limitInt]
 	}
 
 	Success(c, scorers)
