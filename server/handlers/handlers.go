@@ -5,9 +5,9 @@ import (
 	"bluetoothfootball/server/models"
 	"database/sql"
 	"encoding/json"
+	"regexp"
 	"fmt"
 	"net/http"
-	"regexp"
 	"strings"
 	"time"
 
@@ -483,24 +483,69 @@ func GetMatchRecordsByPlayer(c *gin.Context) {
 	playerID := c.Param("playerId")
 
 	rows, err := database.DB.Query(
-		"SELECT id, match_id, match_date, opponent, goal_stats, assist_stats, create_time FROM match_records WHERE player_id = ?",
-		playerID,
+		"SELECT id, match_id, match_date, opponent, goal_stats, assist_stats, create_time FROM match_records WHERE goal_stats LIKE ? OR assist_stats LIKE ?",
+		"%"+playerID+"%", "%"+playerID+"%",
 	)
 	if err != nil {
-		Error(c, 500, "Failed to query match records")
+		Error(c, 500, "Failed to query match records: "+err.Error())
 		return
 	}
 	defer rows.Close()
 
-	var records []models.MatchRecord
+	type PlayerMatchRecord struct {
+		ID         string `json:"id"`
+		MatchID    string `json:"matchId"`
+		MatchDate  string `json:"matchDate"`
+		Opponent   string `json:"opponent"`
+		Goals      int    `json:"goals"`
+		Assists    int    `json:"assists"`
+	}
+
+	re := regexp.MustCompile(`"`+playerID+`":\s*([0-9.]+)`)
+	var records []PlayerMatchRecord
+
 	for rows.Next() {
-		var record models.MatchRecord
-		err := rows.Scan(&record.ID, &record.MatchID, &record.MatchDate, &record.Opponent,
-			&record.GoalStats, &record.AssistStats, &record.CreateTime)
+		var id, matchID, matchDate, opponent, goalStats, assistStats, createTime sql.NullString
+		err := rows.Scan(&id, &matchID, &matchDate, &opponent, &goalStats, &assistStats, &createTime)
 		if err != nil {
 			continue
 		}
-		records = append(records, record)
+
+		goals := 0
+		assists := 0
+
+		if goalStats.String != "" {
+			matches := re.FindAllStringSubmatch(goalStats.String, -1)
+			for _, match := range matches {
+				if len(match) >= 2 {
+					var count int
+					fmt.Sscanf(match[1], "%d", &count)
+					goals += count
+				}
+			}
+		}
+
+		if assistStats.String != "" {
+			matches := re.FindAllStringSubmatch(assistStats.String, -1)
+			for _, match := range matches {
+				if len(match) >= 2 {
+					var count int
+					fmt.Sscanf(match[1], "%d", &count)
+					assists += count
+				}
+			}
+		}
+
+		if goals > 0 || assists > 0 {
+			records = append(records, PlayerMatchRecord{
+				ID:        id.String,
+				MatchID:   matchID.String,
+				MatchDate: matchDate.String,
+				Opponent:  opponent.String,
+				Goals:     goals,
+				Assists:   assists,
+			})
+		}
 	}
 
 	Success(c, records)
@@ -1040,43 +1085,63 @@ func GetTopScorers(c *gin.Context) {
 // GetTopAssists 获取助攻榜
 func GetTopAssists(c *gin.Context) {
 	limit := c.DefaultQuery("limit", "10")
-
-	query := `
-		SELECT p.id, p.name, COALESCE(SUM(mr.assists), 0) as total_assists
-		FROM players p
-		LEFT JOIN match_records mr ON p.id = mr.player_id
-		LEFT JOIN matches m ON mr.match_id = m.id
-		WHERE p.is_active = TRUE
-		GROUP BY p.id, p.name
-		HAVING total_assists > 0
-		ORDER BY total_assists DESC
-		LIMIT ?
-	`
-
-	var limitInt int
+	limitInt := 10
 	fmt.Sscanf(limit, "%d", &limitInt)
 
-	rows, err := database.DB.Query(query, limitInt)
+	rows, err := database.DB.Query("SELECT assist_stats FROM match_records WHERE assist_stats IS NOT NULL")
 	if err != nil {
-		Error(c, 500, "Failed to get top assists")
+		Error(c, 500, "Failed to get top assists: "+err.Error())
 		return
 	}
 	defer rows.Close()
 
-	type Assist struct {
-		ID     string `json:"id"`
-		Name   string `json:"name"`
-		Assists int  `json:"assists"`
-	}
-
-	var assists []Assist
+	assistsMap := make(map[string]int)
+	re := regexp.MustCompile(`"([^"]+)":\s*([0-9.]+)`)
 	for rows.Next() {
-		var assist Assist
-		err := rows.Scan(&assist.ID, &assist.Name, &assist.Assists)
-		if err != nil {
+		var assistStats string
+		if err := rows.Scan(&assistStats); err != nil {
 			continue
 		}
-		assists = append(assists, assist)
+		matches := re.FindAllStringSubmatch(assistStats, -1)
+		for _, match := range matches {
+			if len(match) >= 3 {
+				playerID := match[1]
+				var count int
+				fmt.Sscanf(match[2], "%d", &count)
+				assistsMap[playerID] += count
+			}
+		}
+	}
+
+	playerNames := make(map[string]string)
+	for id := range assistsMap {
+		var name string
+		err := database.DB.QueryRow("SELECT name FROM players WHERE id = ?", id).Scan(&name)
+		if err == nil {
+			playerNames[id] = name
+		}
+	}
+
+	type Assist struct {
+		ID      string `json:"id"`
+		Name    string `json:"name"`
+		Assists int    `json:"assists"`
+	}
+	var assists []Assist
+	for id, asts := range assistsMap {
+		assists = append(assists, Assist{ID: id, Name: playerNames[id], Assists: asts})
+	}
+
+	// 排序
+	for i := 0; i < len(assists)-1; i++ {
+		for j := i + 1; j < len(assists); j++ {
+			if assists[j].Assists > assists[i].Assists {
+				assists[i], assists[j] = assists[j], assists[i]
+			}
+		}
+	}
+	if limitInt < len(assists) {
+		assists = assists[:limitInt]
 	}
 
 	Success(c, assists)
