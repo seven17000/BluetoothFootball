@@ -1,6 +1,6 @@
 // pages/profile-edit/profile-edit.js
 const app = getApp();
-const { userAPI } = require('../../utils/http.js');
+const { userAPI, getStaticUrl } = require('../../utils/http.js');
 
 Page({
   data: {
@@ -28,7 +28,7 @@ Page({
         userInfo,
         formData: {
           name: userInfo.name || userInfo.nickName || '',
-          avatar: userInfo.avatar || '',
+          avatar: getStaticUrl(userInfo.avatar) || '',
           bio: userInfo.bio || ''
         }
       });
@@ -55,7 +55,7 @@ Page({
     // 注意：这里需要根据实际情况实现
     // 如果服务器支持文件上传，需要实现对应的上传接口
     wx.uploadFile({
-      url: 'https://your-server.com/api/upload', // 需要配置实际的上传地址
+      url: 'https://www.bluetoothfc.asia/api/upload/avatar',
       filePath: filePath,
       name: 'file',
       formData: {
@@ -65,7 +65,7 @@ Page({
         const data = JSON.parse(res.data);
         if (data.code === 0) {
           this.setData({
-            'formData.avatar': data.data.url
+            'formData.avatar': getStaticUrl(data.data.url)
           });
           wx.showToast({ title: '头像已更新', icon: 'success' });
         } else {
@@ -116,7 +116,7 @@ Page({
 
       await userAPI.updateUser(openid, {
         name: this.data.formData.name.trim(),
-        avatar: this.data.formData.avatar || '',
+        avatar: this.data.formData.avatar.replace('https://www.bluetoothfc.asia', '') || '',
         role: this.data.userInfo.role || 'user'
       });
 

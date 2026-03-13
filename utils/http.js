@@ -4,6 +4,16 @@ const app = getApp();
 // API基础URL - 需要根据实际情况修改
 // 开发环境使用localhost，真机调试需要改成实际服务器IP
 const API_BASE_URL = 'https://www.bluetoothfc.asia/api';
+const STATIC_BASE_URL = 'https://www.bluetoothfc.asia';
+
+/**
+ * 处理静态资源URL，返回完整URL
+ */
+function getStaticUrl(path) {
+  if (!path) return '';
+  if (path.startsWith('http')) return path;
+  return STATIC_BASE_URL + path;
+}
 
 /**
  * 辅助函数：构建查询字符串
@@ -272,6 +282,11 @@ const attendanceAPI = {
 // ========== 用户相关 ==========
 
 const userAPI = {
+  // 微信登录
+  login(code) {
+    return request('/login?code=' + code);
+  },
+
   // 获取用户
   getUser(openid) {
     return request('/users/' + openid);
@@ -340,6 +355,7 @@ const statsAPI = {
 
 module.exports = {
   request,
+  getStaticUrl,
   playerAPI,
   matchAPI,
   matchRecordAPI,

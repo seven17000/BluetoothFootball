@@ -40,13 +40,17 @@ App({
   // 登录
   async login() {
     try {
-      const loginResult = await wx.cloud.callFunction({
-        name: 'login',
-        data: {}
-      });
+      // 获取微信登录 code
+      const loginRes = await wx.login();
+      if (!loginRes.code) {
+        throw new Error('获取登录码失败');
+      }
 
-      if (loginResult.result && loginResult.result.success) {
-        const userInfo = loginResult.result.data;
+      // 调用服务器登录接口
+      const { userAPI } = require('./utils/http.js');
+      const userInfo = await userAPI.login(loginRes.code);
+
+      if (userInfo) {
         this.globalData.userInfo = userInfo;
         this.globalData.userRole = userInfo.role;
         this.globalData.isLoggedIn = true;

@@ -42,7 +42,7 @@ Page({
 
       // 获取所有球员
       const playersRes = await playerAPI.getPlayers({ isActive: true });
-      const players = playersRes.data || [];
+      const players = playersRes || [];
 
       if (players.length === 0) {
         this.setData({ rankList: [] });
@@ -52,11 +52,11 @@ Page({
 
       // 获取该赛季的比赛
       const matchesRes = await matchAPI.getMatches({ season: currentSeason, limit: 100 });
-      const matches = matchesRes.data || [];
+      const matches = matchesRes || [];
 
       // 获取该赛季的出勤记录
       const attendanceRes = await attendanceAPI.getAttendance();
-      const allAttendance = attendanceRes.data || [];
+      const allAttendance = attendanceRes || [];
 
       // 按球员ID分组计算出勤
       const playerAttendance = {};

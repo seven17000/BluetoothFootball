@@ -1,6 +1,6 @@
 // pages/index/index.js
 const app = getApp();
-const { playerAPI, matchAPI, scheduleAPI, teamPhotoAPI, statsAPI } = require('../../utils/http.js');
+const { playerAPI, matchAPI, scheduleAPI, teamPhotoAPI, statsAPI, getStaticUrl } = require('../../utils/http.js');
 
 // 球队成立日期
 const TEAM_FOUNDED_DATE = new Date('2001-01-01');
@@ -288,7 +288,7 @@ Page({
   async loadTeamPhotos() {
     try {
       const photos = await teamPhotoAPI.getTeamPhotos();
-      const photoUrls = (photos || []).map(item => item.url);
+      const photoUrls = (photos || []).map(item => getStaticUrl(item.url));
       this.setData({ teamPhotos: photoUrls.length > 0 ? photoUrls : ['/images/team-logo.png'] });
     } catch (err) {
       console.log('加载照片失败', err);

@@ -62,7 +62,7 @@ Page({
       if (records.length > 0) {
         // 获取所有球员ID
         const playerIds = records.map(r => r.playerId);
-        const playersRes = await playerAPI.getPlayers();
+        const playersRes = await playerAPI.getPlayers({ pageSize: 50 });
         const players = playersRes || [];
 
         const playerMap = {};
@@ -75,12 +75,17 @@ Page({
         records.forEach(r => {
           const playerId = r.playerId;
           const player = playerMap[playerId] || {};
+
+          // 调试日志
+          console.log('player:', player);
+          console.log('player.position:', player.position, typeof player.position);
+
           playerRecords.push({
             playerId,
             goals: r.goals || 0,
             assists: r.assists || 0,
-            playerName: player.name || '未知',
-            position: player.position || ''
+            playerName: r.playerName || player.name || '未知',
+            position: player.position ? (Array.isArray(player.position) ? player.position.join(', ') : player.position) : ''
           });
         });
 

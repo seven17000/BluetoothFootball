@@ -2,7 +2,7 @@
   <!-- 头像区域 -->
   <view class="avatar-section" bindtap="chooseAvatar">
     <view class="avatar-wrapper">
-      <image class="avatar-img" src="{{formData.avatar || userInfo.avatar || '/images/default-avatar.png'}}" mode="aspectFill"></image>
+      <image class="avatar-img" src="{{formData.avatar || userInfo.avatar || '/images/team-logo.png'}}" mode="aspectFill"></image>
       <view class="avatar-edit-badge">编辑</view>
     </view>
     <text class="avatar-hint">点击更换头像</text>

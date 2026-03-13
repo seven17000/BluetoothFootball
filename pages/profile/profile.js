@@ -1,6 +1,6 @@
 // pages/profile/profile.js
 const app = getApp();
-const { userAPI } = require('../../utils/http.js');
+const { userAPI, getStaticUrl } = require('../../utils/http.js');
 
 Page({
   data: {
@@ -16,6 +16,9 @@ Page({
   // 更新用户状态
   updateUserStatus() {
     const { userInfo, isLoggedIn, userRole } = app.globalData;
+    if (userInfo) {
+      userInfo.avatar = getStaticUrl(userInfo.avatar);
+    }
     this.setData({
       isLoggedIn,
       userInfo: userInfo || null,
@@ -41,6 +44,7 @@ Page({
       try {
         const userData = await userAPI.getUser(openid);
         if (userData) {
+          userData.avatar = getStaticUrl(userData.avatar);
           app.globalData.userInfo = userData;
           app.globalData.userRole = userData.role;
           app.globalData.isLoggedIn = true;
@@ -62,6 +66,7 @@ Page({
         });
         
         const newUserData = await userAPI.getUser(openid);
+        newUserData.avatar = getStaticUrl(newUserData.avatar);
         app.globalData.userInfo = newUserData;
         app.globalData.userRole = newUserData.role;
         app.globalData.isLoggedIn = true;

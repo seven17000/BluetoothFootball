@@ -133,11 +133,11 @@ Page({
 
       // 获取该球员的所有比赛记录
       const recordsRes = await matchRecordAPI.getMatchRecordsByPlayer(playerId);
-      const allRecords = recordsRes.data || [];
+      const allRecords = recordsRes || [];
 
       // 获取所有比赛信息
       const matchesRes = await matchAPI.getMatches({ season: selectedSeason, limit: 100 });
-      const allMatches = matchesRes.data || [];
+      const allMatches = matchesRes || [];
 
       const matchMap = {};
       allMatches.forEach(m => {
@@ -218,7 +218,7 @@ Page({
   async loadAttendanceStats() {
     try {
       const recordsRes = await attendanceAPI.getAttendance({ playerId: this.data.playerId });
-      const records = recordsRes.data || [];
+      const records = recordsRes || [];
 
       const stats = {
         present: 0,
